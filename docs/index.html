@@ -3,24 +3,25 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Gravity Trade Explorer</title>
+  <title>Counterfactual Gravity Shock Explorer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Space+Grotesk:wght@400;600&display=swap"
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Sora:wght@400;600;700&display=swap"
     rel="stylesheet"
   />
   <style>
     :root {
-      --bg: #0b0f14;
-      --panel: #111824;
-      --panel-2: #131b2a;
+      --bg: #f4f1ea;
+      --panel: #ffffff;
+      --panel-alt: #f7f0e1;
+      --ink: #132238;
+      --muted: #556275;
       --accent: #f4b34a;
-      --accent-2: #3ba1c8;
-      --text: #e8edf3;
-      --muted: #9aa6b2;
-      --grid: rgba(255, 255, 255, 0.08);
-      --shadow: rgba(0, 0, 0, 0.25);
+      --accent-dark: #c97d12;
+      --cool: #2f9c95;
+      --grid: rgba(19, 34, 56, 0.08);
+      --shadow: rgba(19, 34, 56, 0.12);
     }
 
     * {
@@ -29,211 +30,196 @@
 
     body {
       margin: 0;
-      font-family: "Space Grotesk", system-ui, -apple-system, sans-serif;
-      color: var(--text);
-      background: radial-gradient(circle at 20% 20%, #1b2a3a 0%, #0b0f14 55%);
+      font-family: "Sora", sans-serif;
+      background: radial-gradient(circle at 15% 20%, #fff6dc 0%, #f4f1ea 48%, #e6efe7 100%);
+      color: var(--ink);
       min-height: 100vh;
-      overflow-x: hidden;
     }
 
     header {
-      padding: 24px clamp(20px, 5vw, 64px) 12px;
+      padding: 28px clamp(18px, 5vw, 64px) 16px;
     }
 
     .title {
-      font-size: clamp(24px, 3vw, 36px);
-      margin: 0 0 6px;
-      letter-spacing: 0.5px;
+      font-size: clamp(26px, 3.2vw, 40px);
+      margin: 0 0 8px;
+      letter-spacing: 0.2px;
     }
 
     .subtitle {
       margin: 0;
+      max-width: 900px;
       color: var(--muted);
-      max-width: 780px;
-      line-height: 1.5;
-      font-size: 14px;
+      line-height: 1.6;
     }
 
     .layout {
       display: grid;
       grid-template-columns: minmax(260px, 340px) 1fr;
-      gap: 18px;
-      padding: 18px clamp(20px, 5vw, 64px) 32px;
+      gap: 20px;
+      padding: 12px clamp(18px, 5vw, 64px) 36px;
     }
 
     .panel {
-      background: linear-gradient(160deg, var(--panel), var(--panel-2));
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 16px;
-      box-shadow: 0 14px 30px var(--shadow);
+      background: var(--panel);
+      border-radius: 18px;
       padding: 18px;
-      height: fit-content;
+      box-shadow: 0 18px 30px var(--shadow);
+      border: 1px solid rgba(19, 34, 56, 0.06);
     }
 
     .panel h2 {
-      font-size: 16px;
       margin: 0 0 12px;
-      color: var(--accent);
+      font-size: 14px;
       text-transform: uppercase;
-      letter-spacing: 1px;
-      font-weight: 600;
+      letter-spacing: 1.4px;
+      color: var(--accent-dark);
     }
 
-    .panel .equation {
+    .equation {
       font-family: "IBM Plex Mono", monospace;
-      font-size: 13px;
-      line-height: 1.6;
-      color: var(--text);
-      background: rgba(0, 0, 0, 0.25);
+      font-size: 12px;
+      background: var(--panel-alt);
       padding: 12px;
       border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      margin-bottom: 16px;
+      line-height: 1.55;
+      border: 1px solid rgba(19, 34, 56, 0.06);
+    }
+
+    .control-group {
+      margin-top: 16px;
     }
 
     label {
-      display: block;
-      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 1px;
-      margin: 14px 0 6px;
       color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    label span {
+      color: var(--ink);
       font-weight: 600;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
     }
 
     select {
       width: 100%;
       padding: 10px 12px;
       border-radius: 10px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      background: rgba(0, 0, 0, 0.3);
-      color: var(--text);
-      font-size: 14px;
+      border: 1px solid rgba(19, 34, 56, 0.12);
       font-family: inherit;
-      cursor: pointer;
-      transition: all 0.2s;
+      background: #fff;
+      color: var(--ink);
     }
 
-    select:hover {
-      border-color: rgba(255, 255, 255, 0.2);
-      background: rgba(0, 0, 0, 0.4);
-    }
-
-    select:focus {
-      outline: none;
-      border-color: var(--accent);
-    }
-
-    .meta {
+    .note {
       font-size: 12px;
+      line-height: 1.5;
       color: var(--muted);
-      line-height: 1.8;
-      margin-top: 14px;
-      padding-top: 14px;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
-    }
-
-    .meta div {
-      margin-bottom: 4px;
-    }
-
-    .meta strong {
-      color: var(--text);
-      font-weight: 600;
+      margin-top: 12px;
     }
 
     #viz {
       position: relative;
-      height: 70vh;
-      min-height: 500px;
-      border-radius: 12px;
+      height: 68vh;
+      min-height: 420px;
+      border-radius: 16px;
+      border: 1px solid rgba(19, 34, 56, 0.08);
+      background: linear-gradient(140deg, rgba(255, 255, 255, 0.8), rgba(244, 241, 234, 0.6));
       overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      background: radial-gradient(circle at 70% 20%, rgba(59, 161, 200, 0.12), transparent 50%);
-    }
-
-    #loading {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: var(--accent);
-      font-size: 16px;
-      font-weight: 600;
-      text-align: center;
-    }
-
-    #error {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: #d1495b;
-      font-size: 14px;
-      text-align: center;
-      padding: 20px;
-      max-width: 400px;
     }
 
     #tooltip {
       position: absolute;
       pointer-events: none;
-      padding: 10px 12px;
-      border-radius: 8px;
-      background: rgba(10, 15, 25, 0.95);
-      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: rgba(19, 34, 56, 0.92);
+      color: #fefcf8;
       font-size: 12px;
-      color: var(--text);
       font-family: "IBM Plex Mono", monospace;
       opacity: 0;
       transition: opacity 0.15s ease;
-      max-width: 280px;
-      line-height: 1.6;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-      z-index: 1000;
+      max-width: 240px;
     }
 
-    .tooltip-header {
-      font-weight: 600;
-      color: var(--accent);
-      margin-bottom: 6px;
-      font-size: 13px;
+    .meta {
+      margin-top: 14px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .meta strong {
+      color: var(--ink);
     }
 
     .legend {
       display: flex;
-      gap: 10px;
       align-items: center;
-      font-size: 11px;
+      gap: 10px;
+      font-size: 12px;
       color: var(--muted);
       margin-top: 12px;
     }
 
     .legend-bar {
-      height: 6px;
       flex: 1;
+      height: 6px;
       border-radius: 999px;
-      background: linear-gradient(90deg, #2b6cb0 0%, #f4b34a 50%, #d1495b 100%);
+      background: linear-gradient(90deg, #2f9c95, #f4b34a, #d1495b);
     }
 
-    .controls {
-      margin-top: 16px;
-      padding-top: 16px;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    .leaderboard {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 18px;
     }
 
-    .controls-hint {
-      font-size: 11px;
+    .leaderboard h3 {
+      margin: 0 0 8px;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--cool);
+    }
+
+    .leaderboard ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      font-size: 12px;
       color: var(--muted);
-      line-height: 1.6;
-      margin-top: 8px;
+    }
+
+    .leaderboard li {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 6px 0;
+      border-bottom: 1px dashed rgba(19, 34, 56, 0.1);
+    }
+
+    .leaderboard span {
+      color: var(--ink);
+      font-weight: 600;
     }
 
     footer {
-      padding: 0 clamp(20px, 5vw, 64px) 32px;
-      color: var(--muted);
+      padding: 0 clamp(18px, 5vw, 64px) 28px;
       font-size: 12px;
-      text-align: center;
+      color: var(--muted);
     }
 
     @media (max-width: 980px) {
@@ -242,73 +228,104 @@
       }
 
       #viz {
-        height: 60vh;
-        min-height: 400px;
+        height: 56vh;
       }
     }
   </style>
 </head>
 <body>
   <header>
-    <h1 class="title">Gravity Trade Explorer</h1>
+    <h1 class="title">Counterfactual Gravity Shock Explorer</h1>
     <p class="subtitle">
-      Interactive 3D view of BACI trade flows using the Anderson-van Wincoop (2003)
-      gravity structure with multilateral resistance captured via exporter/importer
-      fixed effects in a PPML model.
+      Explore bilateral trade responses under Anderson–van Wincoop (2003) gravity with
+      multilateral resistance captured via exporter/importer fixed effects. Use the sliders to
+      scale estimated trade‑cost elasticities and compare predicted trade against baseline.
     </p>
   </header>
 
   <section class="layout">
     <div class="panel">
-      <h2>Model</h2>
+      <h2>Model Core</h2>
       <div class="equation">
-        X_ij = exp(α_i + δ_j - θ·ln(dist_ij) + β′Z_ij)<br />
+        X_ij = exp(α_i + δ_j − θ·ln(dist_ij) + β′Z_ij)<br />
         Z_ij = {contig, comlang, comcol, rta} + {GDP, POP}
       </div>
 
-      <label for="yearSelect">Year</label>
-      <select id="yearSelect"></select>
+      <div class="control-group">
+        <label for="yearSelect">Year <span id="yearValue"></span></label>
+        <select id="yearSelect"></select>
+      </div>
 
-      <label for="zSelect">Z-Axis Metric</label>
-      <select id="zSelect">
-        <option value="log_trade">Log(1 + Trade)</option>
-        <option value="log_trade_pred">Log(1 + Predicted)</option>
-        <option value="log_trade_gap">Residual (Actual - Predicted)</option>
-        <option value="ln_gdp_o">Log(GDP Origin)</option>
-        <option value="ln_gdp_d">Log(GDP Destination)</option>
-      </select>
+      <div class="control-group">
+        <label for="metricSelect">Z‑Axis Metric <span id="metricValue"></span></label>
+        <select id="metricSelect">
+          <option value="actual">Actual Trade (log1p)</option>
+          <option value="pred">Predicted Baseline (log1p)</option>
+          <option value="cf">Predicted Counterfactual (log1p)</option>
+          <option value="delta">Counterfactual Δ (level)</option>
+          <option value="residual">Baseline Residual (level)</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="distSlider">Distance Elasticity <span id="distLabel">1.00×</span></label>
+        <input id="distSlider" type="range" min="0" max="2" step="0.05" value="1" />
+      </div>
+
+      <div class="control-group">
+        <label for="contigSlider">Contiguity Effect <span id="contigLabel">1.00×</span></label>
+        <input id="contigSlider" type="range" min="0" max="2" step="0.05" value="1" />
+      </div>
+
+      <div class="control-group">
+        <label for="langSlider">Common Language Effect <span id="langLabel">1.00×</span></label>
+        <input id="langSlider" type="range" min="0" max="2" step="0.05" value="1" />
+      </div>
+
+      <div class="control-group">
+        <label for="colSlider">Colonial Link Effect <span id="colLabel">1.00×</span></label>
+        <input id="colSlider" type="range" min="0" max="2" step="0.05" value="1" />
+      </div>
+
+      <div class="control-group">
+        <label for="rtaSlider">RTA Coverage Effect <span id="rtaLabel">1.00×</span></label>
+        <input id="rtaSlider" type="range" min="0" max="2" step="0.05" value="1" />
+      </div>
 
       <div class="legend">
-        <span>Underperform</span>
+        <span>Loss</span>
         <div class="legend-bar"></div>
-        <span>Overperform</span>
+        <span>Gain</span>
       </div>
 
-      <div class="controls">
-        <div class="controls-hint">
-          🖱️ <strong>Drag</strong> to rotate<br>
-          🔄 <strong>Scroll</strong> to zoom<br>
-          👆 <strong>Hover</strong> for details
-        </div>
-      </div>
-
-      <div class="meta" id="meta"></div>
+      <p class="note">
+        Partial‑equilibrium counterfactual: fixed effects are held constant (no GE re‑balancing).
+      </p>
     </div>
 
     <div class="panel">
       <h2>Trade Space</h2>
       <div id="viz">
-        <div id="loading">Loading visualization...</div>
-        <div id="error" style="display: none;"></div>
         <div id="tooltip"></div>
+      </div>
+      <div class="meta" id="meta"></div>
+
+      <div class="leaderboard">
+        <div>
+          <h3>Top Winners</h3>
+          <ul id="winners"></ul>
+        </div>
+        <div>
+          <h3>Top Losers</h3>
+          <ul id="losers"></ul>
+        </div>
       </div>
     </div>
   </section>
 
   <footer>
-    Data: BACI bilateral totals + CEPII gravity v202211 •
-    Model: PPML with exporter/importer FE •
-    <a href="https://github.com/ihelfrich/test_repo" style="color: var(--accent); text-decoration: none;">View on GitHub</a>
+    Data: BACI bilateral totals + CEPII gravity v202211. Columnar source in
+    <code>docs/data/baci_gravity_viz.parquet</code> with a JSON render payload for GitHub Pages.
   </footer>
 
   <script type="module">
@@ -319,145 +336,121 @@
     const container = document.getElementById("viz");
     const tooltip = document.getElementById("tooltip");
     const meta = document.getElementById("meta");
-    const loading = document.getElementById("loading");
-    const errorDiv = document.getElementById("error");
+    const winnersList = document.getElementById("winners");
+    const losersList = document.getElementById("losers");
+
     const yearSelect = document.getElementById("yearSelect");
-    const zSelect = document.getElementById("zSelect");
+    const yearValue = document.getElementById("yearValue");
+    const metricSelect = document.getElementById("metricSelect");
+    const metricValue = document.getElementById("metricValue");
 
-    // Scene setup
+    const distSlider = document.getElementById("distSlider");
+    const contigSlider = document.getElementById("contigSlider");
+    const langSlider = document.getElementById("langSlider");
+    const colSlider = document.getElementById("colSlider");
+    const rtaSlider = document.getElementById("rtaSlider");
+
+    const distLabel = document.getElementById("distLabel");
+    const contigLabel = document.getElementById("contigLabel");
+    const langLabel = document.getElementById("langLabel");
+    const colLabel = document.getElementById("colLabel");
+    const rtaLabel = document.getElementById("rtaLabel");
+
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0b0f14);
-    scene.fog = new THREE.Fog(0x0b0f14, 100, 250);
+    scene.fog = new THREE.Fog(0xf4f1ea, 110, 220);
 
-    const camera = new THREE.PerspectiveCamera(
-      50,
-      container.clientWidth / container.clientHeight,
-      1,
-      500
-    );
-    camera.position.set(70, 50, 100);
+    const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 1, 500);
+    camera.position.set(80, 55, 120);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(container.clientWidth, container.clientHeight);
     container.appendChild(renderer.domElement);
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
-    controls.minDistance = 50;
-    controls.maxDistance = 200;
-    controls.maxPolarAngle = Math.PI * 0.9;
+    controls.dampingFactor = 0.08;
 
-    // Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-    scene.add(ambientLight);
-
-    const pointLight = new THREE.PointLight(0xffffff, 0.8);
-    pointLight.position.set(50, 50, 50);
-    scene.add(pointLight);
-
-    // Grid and axes
     const axes = new THREE.AxesHelper(60);
     axes.material.transparent = true;
     axes.material.opacity = 0.5;
     scene.add(axes);
 
-    const gridHelper = new THREE.GridHelper(120, 12, 0x2b3545, 0x1c2432);
-    gridHelper.position.y = -50;
-    gridHelper.material.transparent = true;
-    gridHelper.material.opacity = 0.3;
-    scene.add(gridHelper);
+    const grid = new THREE.GridHelper(120, 8, 0x9aa6b2, 0xcad2dc);
+    grid.position.y = -40;
+    grid.material.transparent = true;
+    grid.material.opacity = 0.5;
+    scene.add(grid);
 
-    // Add axis labels
-    const addAxisLabel = (text, position, color = 0xffffff) => {
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d');
-      canvas.width = 256;
-      canvas.height = 64;
-      context.fillStyle = `#${color.toString(16).padStart(6, '0')}`;
-      context.font = 'Bold 32px Space Grotesk, sans-serif';
-      context.textAlign = 'center';
-      context.fillText(text, 128, 40);
-
-      const texture = new THREE.CanvasTexture(canvas);
-      const spriteMaterial = new THREE.SpriteMaterial({ map: texture, transparent: true });
-      const sprite = new THREE.Sprite(spriteMaterial);
-      sprite.position.copy(position);
-      sprite.scale.set(20, 5, 1);
-      scene.add(sprite);
-    };
-
-    addAxisLabel('Distance', new THREE.Vector3(70, -50, 0), 0xff0000);
-    addAxisLabel('GDP Product', new THREE.Vector3(0, 70, 0), 0x00ff00);
-    addAxisLabel('Z-Metric', new THREE.Vector3(0, -50, 70), 0x0000ff);
-
-    // Visualization state
     let points = null;
     let pointMeta = [];
     const raycaster = new THREE.Raycaster();
-    raycaster.params.Points.threshold = 1.5;
+    raycaster.params.Points.threshold = 1.4;
     const pointer = new THREE.Vector2();
 
-    // Utility functions
+    const state = {
+      shocks: {
+        dist: 1,
+        contig: 1,
+        lang: 1,
+        col: 1,
+        rta: 1,
+      },
+      metric: "actual",
+      year: null,
+    };
+
+    const formatMultiplier = (value) => `${Number(value).toFixed(2)}×`;
+
+    const updateLabels = () => {
+      distLabel.textContent = formatMultiplier(state.shocks.dist);
+      contigLabel.textContent = formatMultiplier(state.shocks.contig);
+      langLabel.textContent = formatMultiplier(state.shocks.lang);
+      colLabel.textContent = formatMultiplier(state.shocks.col);
+      rtaLabel.textContent = formatMultiplier(state.shocks.rta);
+      yearValue.textContent = state.year ? state.year : "";
+      metricValue.textContent = metricSelect.options[metricSelect.selectedIndex].text;
+    };
+
     const normalize = (value, min, max, span) => {
       if (max === min) return 0;
       return ((value - min) / (max - min) - 0.5) * span;
     };
 
-    const colorFromResidual = (value, min, max) => {
+    const colorFromDelta = (value, min, max) => {
       if (max === min) return new THREE.Color(0xf4b34a);
-      const t = Math.min(Math.max((value - min) / (max - min), 0), 1);
-      const hue = (1 - t) * 0.6; // Blue to red
+      const t = (value - min) / (max - min);
+      const hue = (1 - t) * 0.48;
       const color = new THREE.Color();
-      color.setHSL(hue, 0.8, 0.5);
+      color.setHSL(hue, 0.6, 0.52);
       return color;
     };
 
-    const getRanges = (rows) => {
-      const fields = ["ln_dist", "ln_gdp_prod", "ln_gdp_o", "ln_gdp_d", "log_trade", "log_trade_pred", "log_trade_gap"];
-      const ranges = {};
-      fields.forEach((field) => {
-        const values = rows.map((row) => row[field]).filter(v => v !== null && !isNaN(v));
-        if (values.length > 0) {
-          ranges[field] = {
-            min: Math.min(...values),
-            max: Math.max(...values),
-          };
-        } else {
-          ranges[field] = { min: 0, max: 1 };
-        }
-      });
-      return ranges;
+    const formatNumber = (value) => {
+      if (!Number.isFinite(value)) return "n/a";
+      return value.toLocaleString(undefined, { maximumFractionDigits: 2 });
     };
 
-    const buildPoints = (rows, ranges, zField) => {
+    const log1p = (value) => Math.log(1 + Math.max(0, value));
+
+    const buildPoints = (rows, ranges, metricField) => {
       const positions = new Float32Array(rows.length * 3);
       const colors = new Float32Array(rows.length * 3);
-      const sizes = new Float32Array(rows.length);
       pointMeta = [];
 
       rows.forEach((row, i) => {
-        const x = normalize(row.ln_dist, ranges.ln_dist.min, ranges.ln_dist.max, 100);
-        const y = normalize(row.ln_gdp_prod, ranges.ln_gdp_prod.min, ranges.ln_gdp_prod.max, 100);
-        const z = normalize(row[zField], ranges[zField].min, ranges[zField].max, 100);
+        const x = normalize(row.ln_dist, ranges.ln_dist.min, ranges.ln_dist.max, 120);
+        const y = normalize(row.ln_gdp_prod, ranges.ln_gdp_prod.min, ranges.ln_gdp_prod.max, 120);
+        const z = normalize(row[metricField], ranges[metricField].min, ranges[metricField].max, 120);
 
         positions[i * 3] = x;
         positions[i * 3 + 1] = y;
         positions[i * 3 + 2] = z;
 
-        const color = colorFromResidual(
-          row.log_trade_gap,
-          ranges.log_trade_gap.min,
-          ranges.log_trade_gap.max
-        );
+        const color = colorFromDelta(row.delta_pred, ranges.delta_pred.min, ranges.delta_pred.max);
         colors[i * 3] = color.r;
         colors[i * 3 + 1] = color.g;
         colors[i * 3 + 2] = color.b;
-
-        // Size based on trade value
-        const tradeSize = Math.log(row.trade_value_usd_millions + 1);
-        sizes[i] = Math.max(1, Math.min(3, tradeSize / 5));
 
         pointMeta.push(row);
       });
@@ -465,52 +458,76 @@
       const geometry = new THREE.BufferGeometry();
       geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
       geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-      geometry.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
 
       const material = new THREE.PointsMaterial({
-        size: 2,
+        size: 1.8,
         vertexColors: true,
         transparent: true,
         opacity: 0.85,
-        sizeAttenuation: true,
       });
 
       if (points) {
         scene.remove(points);
-        points.geometry.dispose();
-        points.material.dispose();
       }
-
       points = new THREE.Points(geometry, material);
       scene.add(points);
     };
 
-    const formatNumber = (value) => {
-      if (value === null || value === undefined || isNaN(value)) return "n/a";
-      return value.toLocaleString(undefined, { maximumFractionDigits: 2 });
+    const getRanges = (rows, metricField) => {
+      const fields = ["ln_dist", "ln_gdp_prod", metricField, "delta_pred"];
+      const ranges = {};
+      fields.forEach((field) => {
+        const values = rows.map((row) => row[field]);
+        ranges[field] = {
+          min: Math.min(...values),
+          max: Math.max(...values),
+        };
+      });
+      return ranges;
     };
 
-    const updateMeta = (metaInfo, rowCount, year, zField) => {
-      const zFieldName = zSelect.options[zSelect.selectedIndex].text;
+    const updateLeaderboard = (rows) => {
+      const sorted = [...rows].sort((a, b) => b.delta_pred - a.delta_pred);
+      const winners = sorted.slice(0, 5);
+      const losers = sorted.slice(-5).reverse();
+
+      winnersList.innerHTML = winners
+        .map((row) => `
+          <li>
+            <div>${row.iso_o} → ${row.iso_d}</div>
+            <span>${formatNumber(row.delta_pred)}</span>
+          </li>
+        `)
+        .join("");
+
+      losersList.innerHTML = losers
+        .map((row) => `
+          <li>
+            <div>${row.iso_o} → ${row.iso_d}</div>
+            <span>${formatNumber(row.delta_pred)}</span>
+          </li>
+        `)
+        .join("");
+    };
+
+    const updateMeta = (metaInfo, rows, totals, metricField) => {
       meta.innerHTML = `
-        <div><strong>Year:</strong> ${year}</div>
-        <div><strong>Observations:</strong> ${rowCount.toLocaleString()}</div>
-        <div><strong>Z-Axis:</strong> ${zFieldName}</div>
-        <div><strong>Top N:</strong> ${metaInfo.top_n} countries</div>
-        <div><strong>Model:</strong> ${metaInfo.model}</div>
+        <div><strong>Dataset:</strong> ${metaInfo.source}</div>
+        <div><strong>Years:</strong> ${metaInfo.years.join(", ")}</div>
+        <div><strong>Top N:</strong> ${metaInfo.top_n}</div>
+        <div><strong>Rows in view:</strong> ${rows.length}</div>
+        <div><strong>Baseline total:</strong> ${formatNumber(totals.base)}</div>
+        <div><strong>Counterfactual total:</strong> ${formatNumber(totals.cf)}</div>
+        <div><strong>Δ total:</strong> ${formatNumber(totals.delta)}</div>
       `;
     };
 
     const fetchData = async () => {
-      try {
-        const response = await fetch(dataUrl);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return await response.json();
-      } catch (error) {
-        throw new Error(`Failed to load data: ${error.message}`);
+      const response = await fetch(dataUrl);
+      if (!response.ok) {
+        throw new Error("Unable to load data payload.");
       }
+      return response.json();
     };
 
     const init = async () => {
@@ -518,12 +535,16 @@
         const payload = await fetchData();
         const rows = payload.rows;
         const metaInfo = payload.meta;
+        const coeffs = metaInfo.coefficients || {};
 
-        if (!rows || rows.length === 0) {
-          throw new Error("No data rows found in payload");
-        }
+        const getCoeff = (key) => (key in coeffs ? coeffs[key] : 0);
 
-        // Populate year selector
+        const rowsByYear = rows.reduce((acc, row) => {
+          if (!acc[row.year]) acc[row.year] = [];
+          acc[row.year].push(row);
+          return acc;
+        }, {});
+
         const years = metaInfo.years;
         years.forEach((year) => {
           const option = document.createElement("option");
@@ -532,71 +553,107 @@
           yearSelect.appendChild(option);
         });
 
-        const ranges = getRanges(rows);
+        state.year = years[years.length - 1];
+        yearSelect.value = state.year;
+        metricSelect.value = state.metric;
+        updateLabels();
 
-        const renderYear = () => {
-          const year = parseInt(yearSelect.value, 10);
-          const zField = zSelect.value;
-          const filtered = rows.filter((row) => row.year === year);
+        const applyScenario = () => {
+          const year = parseInt(state.year, 10);
+          const yearRows = rowsByYear[year] || [];
 
-          if (filtered.length === 0) {
-            console.warn(`No data for year ${year}`);
-            return;
-          }
+          const computed = yearRows.map((row) => {
+            const deltaEta =
+              (state.shocks.dist - 1) * getCoeff("ln_dist") * row.ln_dist +
+              (state.shocks.contig - 1) * getCoeff("contig") * row.contig +
+              (state.shocks.lang - 1) * getCoeff("comlang_off") * row.comlang_off +
+              (state.shocks.col - 1) * getCoeff("comcol") * row.comcol +
+              (state.shocks.rta - 1) * getCoeff("rta_coverage") * row.rta_coverage;
 
-          buildPoints(filtered, ranges, zField);
-          updateMeta(metaInfo, filtered.length, year, zField);
+            const etaCf = row.base_eta + deltaEta;
+            const tradeCf = Math.exp(etaCf);
+            const deltaPred = tradeCf - row.trade_pred;
+
+            return {
+              ...row,
+              trade_cf: tradeCf,
+              delta_pred: deltaPred,
+              residual: row.trade_value_usd_millions - row.trade_pred,
+              z_actual: log1p(row.trade_value_usd_millions),
+              z_pred: log1p(row.trade_pred),
+              z_cf: log1p(tradeCf),
+            };
+          });
+
+          let metricField = "z_actual";
+          if (state.metric === "pred") metricField = "z_pred";
+          if (state.metric === "cf") metricField = "z_cf";
+          if (state.metric === "delta") metricField = "delta_pred";
+          if (state.metric === "residual") metricField = "residual";
+
+          const ranges = getRanges(computed, metricField);
+          buildPoints(computed, ranges, metricField);
+          updateLeaderboard(computed);
+
+          const totals = computed.reduce(
+            (acc, row) => {
+              acc.base += row.trade_pred;
+              acc.cf += row.trade_cf;
+              return acc;
+            },
+            { base: 0, cf: 0 }
+          );
+          totals.delta = totals.cf - totals.base;
+
+          updateMeta(metaInfo, computed, totals, metricField);
         };
 
-        // Set initial year to most recent
-        yearSelect.value = years[years.length - 1];
-        renderYear();
+        const updateState = () => {
+          state.year = yearSelect.value;
+          state.metric = metricSelect.value;
+          state.shocks.dist = parseFloat(distSlider.value);
+          state.shocks.contig = parseFloat(contigSlider.value);
+          state.shocks.lang = parseFloat(langSlider.value);
+          state.shocks.col = parseFloat(colSlider.value);
+          state.shocks.rta = parseFloat(rtaSlider.value);
+          updateLabels();
+          applyScenario();
+        };
 
-        yearSelect.addEventListener("change", renderYear);
-        zSelect.addEventListener("change", renderYear);
+        yearSelect.addEventListener("change", updateState);
+        metricSelect.addEventListener("change", updateState);
+        [distSlider, contigSlider, langSlider, colSlider, rtaSlider].forEach((control) =>
+          control.addEventListener("input", updateState)
+        );
 
-        // Mouse interaction
-        container.addEventListener("pointermove", (event) => {
-          if (!points) return;
+        updateState();
 
+        container.addEventListener("mousemove", (event) => {
           const rect = container.getBoundingClientRect();
           pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
           pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
           raycaster.setFromCamera(pointer, camera);
           const intersects = raycaster.intersectObject(points);
-
-          if (intersects.length > 0) {
+          if (intersects.length) {
             const idx = intersects[0].index;
             const row = pointMeta[idx];
-            tooltip.style.opacity = "1";
-            tooltip.style.left = `${event.clientX - rect.left + 15}px`;
-            tooltip.style.top = `${event.clientY - rect.top + 15}px`;
+            tooltip.style.opacity = 1;
+            tooltip.style.left = `${event.offsetX + 12}px`;
+            tooltip.style.top = `${event.offsetY + 12}px`;
             tooltip.innerHTML = `
-              <div class="tooltip-header">${row.iso_o} → ${row.iso_d} (${row.year})</div>
-              <div>Trade: $${formatNumber(row.trade_value_usd_millions)}M</div>
-              <div>Predicted: $${formatNumber(row.trade_pred)}M</div>
-              <div>Residual: ${formatNumber(row.log_trade_gap)}</div>
-              <div>Distance: ${formatNumber(Math.exp(row.ln_dist))} km</div>
-              ${row.contig ? '<div>🔗 Contiguous</div>' : ''}
-              ${row.comlang_off ? '<div>🗣️ Common language</div>' : ''}
+              <div><strong>${row.iso_o} → ${row.iso_d}</strong> (${row.year})</div>
+              <div>Actual: ${formatNumber(row.trade_value_usd_millions)} (USD M)</div>
+              <div>Baseline: ${formatNumber(row.trade_pred)}</div>
+              <div>Counterfactual: ${formatNumber(row.trade_cf)}</div>
+              <div>Δ Predicted: ${formatNumber(row.delta_pred)}</div>
+              <div>ln(dist): ${formatNumber(row.ln_dist)}</div>
             `;
           } else {
-            tooltip.style.opacity = "0";
+            tooltip.style.opacity = 0;
           }
         });
-
-        container.addEventListener("pointerleave", () => {
-          tooltip.style.opacity = "0";
-        });
-
-        loading.style.display = "none";
-
       } catch (err) {
-        console.error("Initialization error:", err);
-        loading.style.display = "none";
-        errorDiv.style.display = "block";
-        errorDiv.innerHTML = `<strong>Error loading visualization:</strong><br>${err.message}`;
+        meta.textContent = err.message;
       }
     };
 

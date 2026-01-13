@@ -129,6 +129,10 @@ def main() -> None:
     result = model.fit()
 
     df["trade_pred"] = result.predict(df)
+    try:
+        df["base_eta"] = result.predict(df, which="linear")
+    except TypeError:
+        df["base_eta"] = result.predict(df, linear=True)
     df["log_trade"] = np.log1p(df["trade_value_usd_millions"])
     df["log_trade_pred"] = np.log1p(df["trade_pred"])
     df["log_trade_gap"] = df["log_trade"] - df["log_trade_pred"]
@@ -139,6 +143,7 @@ def main() -> None:
         "iso_d",
         "trade_value_usd_millions",
         "trade_pred",
+        "base_eta",
         "log_trade",
         "log_trade_pred",
         "log_trade_gap",
@@ -155,6 +160,19 @@ def main() -> None:
 
     df_out.to_parquet(out_parquet, index=False)
 
+    coef_terms = [
+        "ln_dist",
+        "contig",
+        "comlang_off",
+        "comcol",
+        "rta_coverage",
+        "ln_gdp_o",
+        "ln_gdp_d",
+        "ln_pop_o",
+        "ln_pop_d",
+    ]
+    coefficients = {term: float(result.params.get(term, 0.0)) for term in coef_terms}
+
     payload = {
         "meta": {
             "source": "BACI bilateral totals + CEPII gravity v202211",
@@ -162,6 +180,7 @@ def main() -> None:
             "top_n": args.top_n,
             "model": "Anderson-van Wincoop (2003) gravity with exporter/importer FE (PPML)",
             "notes": "Predictions from Poisson GLM with fixed effects; log variables are log(1+x).",
+            "coefficients": coefficients,
         },
         "rows": df_out.to_dict(orient="records"),
     }
