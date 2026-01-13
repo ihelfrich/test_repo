@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gravity Trade Explorer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Space+Grotesk:wght@400;600&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --panel: #111824;
+      --panel-2: #131b2a;
+      --accent: #f4b34a;
+      --accent-2: #3ba1c8;
+      --text: #e8edf3;
+      --muted: #9aa6b2;
+      --grid: rgba(255, 255, 255, 0.08);
+      --shadow: rgba(0, 0, 0, 0.25);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Space Grotesk", system-ui, -apple-system, sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at 20% 20%, #1b2a3a 0%, #0b0f14 55%);
+      min-height: 100vh;
+    }
+
+    header {
+      padding: 24px clamp(20px, 5vw, 64px) 12px;
+    }
+
+    .title {
+      font-size: clamp(24px, 3vw, 36px);
+      margin: 0 0 6px;
+      letter-spacing: 0.5px;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      max-width: 780px;
+      line-height: 1.5;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(260px, 340px) 1fr;
+      gap: 18px;
+      padding: 18px clamp(20px, 5vw, 64px) 32px;
+    }
+
+    .panel {
+      background: linear-gradient(160deg, var(--panel), var(--panel-2));
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      box-shadow: 0 14px 30px var(--shadow);
+      padding: 18px;
+    }
+
+    .panel h2 {
+      font-size: 16px;
+      margin: 0 0 12px;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .panel .equation {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--text);
+      background: rgba(0, 0, 0, 0.25);
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin: 10px 0 6px;
+      color: var(--muted);
+    }
+
+    select {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(0, 0, 0, 0.2);
+      color: var(--text);
+      font-size: 14px;
+      font-family: inherit;
+    }
+
+    .meta {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .meta strong {
+      color: var(--text);
+    }
+
+    #viz {
+      position: relative;
+      height: 70vh;
+      min-height: 420px;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: radial-gradient(circle at 70% 20%, rgba(59, 161, 200, 0.12), transparent 50%);
+    }
+
+    #tooltip {
+      position: absolute;
+      pointer-events: none;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: rgba(15, 20, 30, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 12px;
+      color: var(--text);
+      font-family: "IBM Plex Mono", monospace;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+      max-width: 240px;
+    }
+
+    .legend {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 12px;
+    }
+
+    .legend-bar {
+      height: 6px;
+      flex: 1;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #2b6cb0, #f4b34a, #d1495b);
+    }
+
+    footer {
+      padding: 0 clamp(20px, 5vw, 64px) 32px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @media (max-width: 980px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      #viz {
+        height: 60vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 class="title">Gravity Trade Explorer</h1>
+    <p class="subtitle">
+      Interactive view of BACI trade flows using the Anderson-van Wincoop (2003)
+      gravity structure with multilateral resistance captured via exporter/importer
+      fixed effects in a PPML model.
+    </p>
+  </header>
+
+  <section class="layout">
+    <div class="panel">
+      <h2>Model</h2>
+      <div class="equation">
+        X_ij = exp(α_i + δ_j - θ·ln(dist_ij) + β′Z_ij)<br />
+        Z_ij = {contig, comlang, comcol, rta} + {GDP, POP}
+      </div>
+      <label for="yearSelect">Year</label>
+      <select id="yearSelect"></select>
+      <label for="zSelect">Z-Axis Metric</label>
+      <select id="zSelect">
+        <option value="log_trade">Log(1 + Trade)</option>
+        <option value="log_trade_pred">Log(1 + Predicted)</option>
+        <option value="log_trade_gap">Residual (Actual - Predicted)</option>
+      </select>
+      <div class="legend">
+        <span>Residual</span>
+        <div class="legend-bar"></div>
+        <span>Outperformance</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Trade Space</h2>
+      <div id="viz">
+        <div id="tooltip"></div>
+      </div>
+      <div class="meta" id="meta"></div>
+    </div>
+  </section>
+
+  <footer>
+    Data source: BACI bilateral totals + CEPII gravity v202211. Columnar source stored in
+    docs/data/baci_gravity_viz.parquet; JSON is a lightweight render payload.
+  </footer>
+
+  <script type="module">
+    import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js";
+    import { OrbitControls } from "https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/controls/OrbitControls.js";
+
+    const dataUrl = "data/baci_gravity_viz.json";
+    const container = document.getElementById("viz");
+    const tooltip = document.getElementById("tooltip");
+    const meta = document.getElementById("meta");
+    const yearSelect = document.getElementById("yearSelect");
+    const zSelect = document.getElementById("zSelect");
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0x0b0f14, 120, 220);
+
+    const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 1, 500);
+    camera.position.set(80, 60, 120);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    container.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.06;
+
+    const axes = new THREE.AxesHelper(60);
+    axes.material.transparent = true;
+    axes.material.opacity = 0.4;
+    scene.add(axes);
+
+    const grid = new THREE.GridHelper(120, 8, 0x2b3545, 0x1c2432);
+    grid.position.y = -40;
+    grid.material.transparent = true;
+    grid.material.opacity = 0.4;
+    scene.add(grid);
+
+    let points = null;
+    let pointMeta = [];
+    const raycaster = new THREE.Raycaster();
+    raycaster.params.Points.threshold = 1.2;
+    const pointer = new THREE.Vector2();
+
+    const normalize = (value, min, max, span) => {
+      if (max === min) return 0;
+      return ((value - min) / (max - min) - 0.5) * span;
+    };
+
+    const colorFromResidual = (value, min, max) => {
+      if (max === min) return new THREE.Color(0xf4b34a);
+      const t = (value - min) / (max - min);
+      const hue = (1 - t) * 0.66;
+      const color = new THREE.Color();
+      color.setHSL(hue, 0.75, 0.55);
+      return color;
+    };
+
+    const buildPoints = (rows, ranges, zField) => {
+      const positions = new Float32Array(rows.length * 3);
+      const colors = new Float32Array(rows.length * 3);
+      pointMeta = [];
+
+      rows.forEach((row, i) => {
+        const x = normalize(row.ln_dist, ranges.ln_dist.min, ranges.ln_dist.max, 120);
+        const y = normalize(row.ln_gdp_prod, ranges.ln_gdp_prod.min, ranges.ln_gdp_prod.max, 120);
+        const z = normalize(row[zField], ranges[zField].min, ranges[zField].max, 120);
+
+        positions[i * 3] = x;
+        positions[i * 3 + 1] = y;
+        positions[i * 3 + 2] = z;
+
+        const color = colorFromResidual(row.log_trade_gap, ranges.log_trade_gap.min, ranges.log_trade_gap.max);
+        colors[i * 3] = color.r;
+        colors[i * 3 + 1] = color.g;
+        colors[i * 3 + 2] = color.b;
+
+        pointMeta.push(row);
+      });
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+      geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+
+      const material = new THREE.PointsMaterial({
+        size: 1.6,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.9,
+      });
+
+      if (points) {
+        scene.remove(points);
+      }
+      points = new THREE.Points(geometry, material);
+      scene.add(points);
+    };
+
+    const getRanges = (rows) => {
+      const fields = ["ln_dist", "ln_gdp_prod", "log_trade", "log_trade_pred", "log_trade_gap"];
+      const ranges = {};
+      fields.forEach((field) => {
+        const values = rows.map((row) => row[field]);
+        ranges[field] = {
+          min: Math.min(...values),
+          max: Math.max(...values),
+        };
+      });
+      return ranges;
+    };
+
+    const formatNumber = (value) => {
+      if (value === null || value === undefined) return "n/a";
+      return value.toLocaleString(undefined, { maximumFractionDigits: 2 });
+    };
+
+    const updateMeta = (metaInfo, rowCount, year, zField) => {
+      meta.innerHTML = `
+        <div><strong>Dataset:</strong> ${metaInfo.source}</div>
+        <div><strong>Years:</strong> ${metaInfo.years.join(", ")}</div>
+        <div><strong>Top N countries:</strong> ${metaInfo.top_n}</div>
+        <div><strong>Rows in view:</strong> ${rowCount}</div>
+        <div><strong>Z-axis:</strong> ${zSelect.options[zSelect.selectedIndex].text}</div>
+        <div><strong>Year selected:</strong> ${year}</div>
+      `;
+    };
+
+    const fetchData = async () => {
+      const response = await fetch(dataUrl);
+      if (!response.ok) {
+        throw new Error("Unable to load data payload.");
+      }
+      return response.json();
+    };
+
+    const init = async () => {
+      try {
+        const payload = await fetchData();
+        const rows = payload.rows;
+        const metaInfo = payload.meta;
+
+        const years = metaInfo.years;
+        years.forEach((year) => {
+          const option = document.createElement("option");
+          option.value = year;
+          option.textContent = year;
+          yearSelect.appendChild(option);
+        });
+
+        const ranges = getRanges(rows);
+
+        const renderYear = () => {
+          const year = parseInt(yearSelect.value, 10);
+          const zField = zSelect.value;
+          const filtered = rows.filter((row) => row.year === year);
+          buildPoints(filtered, ranges, zField);
+          updateMeta(metaInfo, filtered.length, year, zField);
+        };
+
+        yearSelect.value = years[years.length - 1];
+        renderYear();
+
+        yearSelect.addEventListener("change", renderYear);
+        zSelect.addEventListener("change", renderYear);
+
+        container.addEventListener("mousemove", (event) => {
+          const rect = container.getBoundingClientRect();
+          pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+          pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+          raycaster.setFromCamera(pointer, camera);
+          const intersects = raycaster.intersectObject(points);
+          if (intersects.length) {
+            const idx = intersects[0].index;
+            const row = pointMeta[idx];
+            tooltip.style.opacity = 1;
+            tooltip.style.left = `${event.offsetX + 12}px`;
+            tooltip.style.top = `${event.offsetY + 12}px`;
+            tooltip.innerHTML = `
+              <div><strong>${row.iso_o} → ${row.iso_d}</strong> (${row.year})</div>
+              <div>Actual: ${formatNumber(row.trade_value_usd_millions)} (USD M)</div>
+              <div>Predicted: ${formatNumber(row.trade_pred)}</div>
+              <div>Residual: ${formatNumber(row.log_trade_gap)}</div>
+              <div>ln(dist): ${formatNumber(row.ln_dist)}</div>
+            `;
+          } else {
+            tooltip.style.opacity = 0;
+          }
+        });
+      } catch (err) {
+        meta.textContent = err.message;
+      }
+    };
+
+    const animate = () => {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    };
+
+    window.addEventListener("resize", () => {
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
+    });
+
+    init();
+    animate();
+  </script>
+</body>
+</html>

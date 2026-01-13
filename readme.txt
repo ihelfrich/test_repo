@@ -27,3 +27,15 @@
 - logs/running_log.md is the canonical log for progress, decisions, and key notes for collaboration.
 
 
+
+##### Setting up a virtual environment
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+
+##### To run existing environments: 
+# find the environment.yml file
+# .\.venv\Scripts\Activate.ps1

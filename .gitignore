@@ -9,3 +9,6 @@
 
 # Local env files
 .env
+
+# Virtual environments
+/baileym_test/

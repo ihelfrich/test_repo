@@ -1,0 +1,2 @@
+rows,years,exporters,importers,total_trade_value,mean_trade_value,median_trade_value,p10_trade_value,p90_trade_value,zero_share
+95971,3,226,226,56287840139.25001,586508.8426634088,1768.2130000000002,2.594,402234.556,0.0
