@@ -1,0 +1,11 @@
+# Data (kept external or limited in size)
+/data/raw/
+/data/interim/
+/data/processed/
+/data/external/
+
+# Notebook checkpoints
+/notebooks/.ipynb_checkpoints/
+
+# Local env files
+.env

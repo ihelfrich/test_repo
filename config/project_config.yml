@@ -1,0 +1,7 @@
+project_name: "TBD"
+objective: "Run a gravity model analysis of international trade."
+data_directory: "/Users/ian/trade_data_warehouse"
+max_data_mb: 500
+start_date: "2026-01-13"
+author: "Dr. Ian Helfrich"
+notes: "Keep data external when possible; avoid copying large files into the repo."
