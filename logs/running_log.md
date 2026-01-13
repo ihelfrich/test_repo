@@ -395,3 +395,4 @@ Perfect for:
 
 **Status:** ✅ PRODUCTION READY • 🌐 LIVE ON GITHUB PAGES • 📚 FULLY DOCUMENTED • 🔬 ACADEMICALLY RIGOROUS
 🤖 ChatGPT (2026-01-13 16:40:23 -0600): Prepped the Counterfactual Gravity Shock Explorer for GitHub Pages (updated docs/index.html + refreshed docs/data payloads). Next step: commit + push, then enable GitHub Pages on /docs.
+🤖 ChatGPT (2026-01-13 16:44:48 -0600): Added explicit data-load diagnostics to docs/index.html: file:// guardrail, cache-busted fetch, and clear recovery steps for GitHub Pages or local server.

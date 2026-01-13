@@ -332,7 +332,7 @@
     import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js";
     import { OrbitControls } from "https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/controls/OrbitControls.js";
 
-    const dataUrl = "data/baci_gravity_viz.json";
+    const dataUrl = new URL("data/baci_gravity_viz.json", window.location.href).href;
     const container = document.getElementById("viz");
     const tooltip = document.getElementById("tooltip");
     const meta = document.getElementById("meta");
@@ -523,15 +523,21 @@
     };
 
     const fetchData = async () => {
-      const response = await fetch(dataUrl);
+      if (window.location.protocol === "file:") {
+        throw new Error(
+          "This page must be served from a web server. Run: python3 -m http.server --directory docs"
+        );
+      }
+      const response = await fetch(dataUrl, { cache: "no-store" });
       if (!response.ok) {
-        throw new Error("Unable to load data payload.");
+        throw new Error(`Unable to load data payload (${response.status}).`);
       }
       return response.json();
     };
 
     const init = async () => {
       try {
+        meta.textContent = `Loading data from ${dataUrl} ...`;
         const payload = await fetchData();
         const rows = payload.rows;
         const metaInfo = payload.meta;
@@ -653,7 +659,13 @@
           }
         });
       } catch (err) {
-        meta.textContent = err.message;
+        meta.innerHTML = `
+          <div><strong>Data load failed:</strong> ${err.message}</div>
+          <div>Fixes:</div>
+          <div>1) Serve via GitHub Pages (Settings → Pages → main /docs).</div>
+          <div>2) Or run: python3 -m http.server --directory docs</div>
+          <div>3) Then open: http://localhost:8000</div>
+        `;
       }
     };
 
