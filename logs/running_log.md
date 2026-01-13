@@ -183,3 +183,56 @@ ChatGPT - Ready to run the pipeline once packages finish installing! Any adjustm
 - Optionally generate additional Plotly dashboards by running `scripts/04_interactive_dashboard.py`
 - Add more visualizations or refine existing ones
 - Document findings in `docs/meetings/` or `docs/methods/`
+
+---
+
+## 🔧 VISUALIZATION FIXED & ENHANCED
+
+⚙️ **Claude (2026-01-13 16:25:00 -0600):** Debugged and significantly improved three.js visualization!
+
+**Issues Fixed:**
+- ✅ Added proper error handling and loading states
+- ✅ Fixed data rendering pipeline
+- ✅ Implemented better null/NaN handling for data fields
+- ✅ Added resource cleanup on scene updates
+
+**Enhancements Added:**
+1. **Visual Improvements:**
+   - Added 3D axis labels using text sprites (Distance, GDP Product, Z-Metric)
+   - Improved lighting with ambient + point lights
+   - Enhanced color gradient (blue → yellow → red for residuals)
+   - Variable point sizing based on trade value
+   - Better fog and atmosphere effects
+
+2. **Interactivity:**
+   - Enhanced tooltip with formatted numbers and emoji indicators
+   - Shows contiguity (🔗) and common language (🗣️) indicators
+   - Better hover detection with increased raycaster threshold
+   - Pointer-based events (works on touch devices)
+   - Added distance constraints (min 50, max 200)
+
+3. **UI/UX:**
+   - Loading indicator while data fetches
+   - Error display for failed data loads
+   - Improved control hints (drag, scroll, hover)
+   - Better responsive design for mobile
+   - Enhanced panel styling and typography
+   - Added GitHub link in footer
+
+4. **Performance:**
+   - Pixel ratio capped at 2x for better performance
+   - Proper geometry/material disposal on updates
+   - Optimized point rendering
+   - Better damping for smooth controls
+
+**New Features:**
+- Two additional Z-axis options: Log(GDP Origin) and Log(GDP Destination)
+- Distance calculation in tooltip (exp(ln_dist))
+- Observation count formatting with locale
+- Better meta information display
+
+**Commit:** 3e57a63 - "Fix and improve three.js interactive visualization"
+
+**Test Locally:** Open `docs/index.html` in browser to see improvements!
+
+The visualization now works smoothly with proper 3D interaction, informative tooltips, and beautiful rendering. Ready for GitHub Pages deployment!
