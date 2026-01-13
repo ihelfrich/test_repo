@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Methodology | Gravity Trade Flow Analysis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #2f9c95;
+      --secondary: #f4b34a;
+      --dark: #132238;
+      --muted: #556275;
+      --bg: #fafbfc;
+      --panel: #ffffff;
+      --border: rgba(19, 34, 56, 0.1);
+    }
+
+    body {
+      font-family: "Sora", sans-serif;
+      line-height: 1.7;
+      color: var(--dark);
+      background: var(--bg);
+    }
+
+    nav {
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(19, 34, 56, 0.04);
+    }
+
+    nav .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    nav h1 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--dark);
+    }
+
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 24px;
+    }
+
+    nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+
+    nav a:hover {
+      color: var(--primary);
+    }
+
+    .hero {
+      background: linear-gradient(135deg, var(--primary) 0%, #1d6660 100%);
+      color: white;
+      padding: 64px 24px;
+      text-align: center;
+    }
+
+    .hero h1 {
+      font-size: 42px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .hero p {
+      font-size: 18px;
+      max-width: 700px;
+      margin: 0 auto;
+      opacity: 0.95;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 48px 24px;
+    }
+
+    section {
+      margin-bottom: 64px;
+    }
+
+    h2 {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      color: var(--dark);
+      border-bottom: 3px solid var(--primary);
+      padding-bottom: 12px;
+    }
+
+    h3 {
+      font-size: 24px;
+      font-weight: 600;
+      margin: 32px 0 16px;
+      color: var(--dark);
+    }
+
+    h4 {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 24px 0 12px;
+      color: var(--primary);
+    }
+
+    p {
+      margin-bottom: 16px;
+      font-size: 16px;
+    }
+
+    .equation-block {
+      background: var(--panel);
+      border-left: 4px solid var(--secondary);
+      padding: 24px;
+      margin: 24px 0;
+      border-radius: 8px;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 15px;
+      line-height: 1.8;
+      overflow-x: auto;
+    }
+
+    .highlight-box {
+      background: linear-gradient(135deg, rgba(47, 156, 149, 0.08), rgba(47, 156, 149, 0.04));
+      border: 1px solid var(--primary);
+      border-radius: 12px;
+      padding: 24px;
+      margin: 24px 0;
+    }
+
+    .highlight-box h4 {
+      margin-top: 0;
+    }
+
+    ul, ol {
+      margin: 16px 0 16px 32px;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    .method-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      margin: 32px 0;
+    }
+
+    .method-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .method-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px rgba(19, 34, 56, 0.1);
+    }
+
+    .method-card h4 {
+      margin-top: 0;
+      font-size: 16px;
+    }
+
+    .method-card p {
+      font-size: 14px;
+      color: var(--muted);
+      margin: 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 24px 0;
+      background: var(--panel);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 14px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background: rgba(47, 156, 149, 0.08);
+      font-weight: 600;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--dark);
+    }
+
+    td {
+      font-size: 15px;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    code {
+      background: rgba(47, 156, 149, 0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 14px;
+    }
+
+    .reference {
+      font-size: 14px;
+      color: var(--muted);
+      font-style: italic;
+      margin-top: 8px;
+    }
+
+    footer {
+      background: var(--dark);
+      color: rgba(255, 255, 255, 0.8);
+      padding: 32px 24px;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    footer a {
+      color: var(--secondary);
+      text-decoration: none;
+    }
+
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 32px;
+      }
+
+      nav ul {
+        gap: 12px;
+      }
+
+      nav a {
+        font-size: 13px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="container">
+      <h1>Gravity Trade Flow Analysis</h1>
+      <ul>
+        <li><a href="landing.html">Home</a></li>
+        <li><a href="index.html">Visualization</a></li>
+        <li><a href="methodology.html">Methodology</a></li>
+        <li><a href="https://github.com/ihelfrich/test_repo">GitHub</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="hero">
+    <h1>Methodology</h1>
+    <p>Rigorous econometric approach to modeling bilateral trade flows using structural gravity</p>
+  </div>
+
+  <div class="container">
+    <section>
+      <h2>Theoretical Foundation</h2>
+
+      <p>This analysis implements the <strong>Anderson-van Wincoop (2003)</strong> structural gravity model, which provides a theoretically-grounded framework for understanding bilateral trade patterns. The model accounts for multilateral resistance terms that capture how trade between any two countries depends not just on bilateral trade costs, but on trade costs with all potential trading partners.</p>
+
+      <div class="equation-block">
+        <strong>Structural Gravity Equation:</strong><br><br>
+        X<sub>ij</sub> = (Y<sub>i</sub> × E<sub>j</sub> / Y<sup>W</sup>) × (t<sub>ij</sub> / (Π<sub>i</sub> × P<sub>j</sub>))<sup>1-σ</sup>
+      </div>
+
+      <p>Where:</p>
+      <ul>
+        <li><strong>X<sub>ij</sub></strong> = Bilateral exports from country i to country j</li>
+        <li><strong>Y<sub>i</sub></strong> = Total output (GDP) of exporter i</li>
+        <li><strong>E<sub>j</sub></strong> = Total expenditure (GDP) of importer j</li>
+        <li><strong>Y<sup>W</sup></strong> = World GDP</li>
+        <li><strong>t<sub>ij</sub></strong> = Bilateral trade costs between i and j</li>
+        <li><strong>Π<sub>i</sub></strong> = Outward multilateral resistance (exporter i's average trade costs)</li>
+        <li><strong>P<sub>j</sub></strong> = Inward multilateral resistance (importer j's average trade costs)</li>
+        <li><strong>σ</strong> = Elasticity of substitution</li>
+      </ul>
+
+      <div class="highlight-box">
+        <h4>Key Innovation: Multilateral Resistance</h4>
+        <p>The Anderson-van Wincoop framework recognizes that bilateral trade depends on <em>relative</em> trade costs. A country will trade more with a partner if that partner offers relatively low trade costs compared to alternatives. This "multilateral resistance" effect resolves the famous "border puzzle" and is essential for credible trade policy analysis.</p>
+      </div>
+    </section>
+
+    <section>
+      <h2>Empirical Specification</h2>
+
+      <p>We implement the gravity model in its estimable form using a Poisson Pseudo-Maximum Likelihood (PPML) specification with fixed effects to capture multilateral resistance:</p>
+
+      <div class="equation-block">
+        <strong>Estimating Equation:</strong><br><br>
+        X<sub>ijt</sub> = exp(α<sub>i</sub> + δ<sub>j</sub> + γ<sub>t</sub> - θ·ln(dist<sub>ij</sub>) + β'Z<sub>ij</sub>) × ε<sub>ijt</sub>
+      </div>
+
+      <p>Components:</p>
+      <ul>
+        <li><strong>α<sub>i</sub></strong> = Exporter fixed effects (capture Π<sub>i</sub> and Y<sub>i</sub>)</li>
+        <li><strong>δ<sub>j</sub></strong> = Importer fixed effects (capture P<sub>j</sub> and E<sub>j</sub>)</li>
+        <li><strong>γ<sub>t</sub></strong> = Year fixed effects (capture global trends)</li>
+        <li><strong>θ</strong> = Distance elasticity (trade cost sensitivity)</li>
+        <li><strong>Z<sub>ij</sub></strong> = Vector of bilateral covariates:
+          <ul>
+            <li>Contiguity (shared border)</li>
+            <li>Common official language</li>
+            <li>Colonial relationship</li>
+            <li>Regional trade agreement (RTA)</li>
+            <li>Log GDP (origin and destination)</li>
+            <li>Log population (origin and destination)</li>
+          </ul>
+        </li>
+      </ul>
+
+      <h3>Why Fixed Effects?</h3>
+
+      <div class="method-grid">
+        <div class="method-card">
+          <h4>Exporter FE (α<sub>i</sub>)</h4>
+          <p>Controls for all country-specific factors affecting export supply: production capacity, technology, trade policies, outward multilateral resistance.</p>
+        </div>
+        <div class="method-card">
+          <h4>Importer FE (δ<sub>j</sub>)</h4>
+          <p>Controls for all country-specific factors affecting import demand: market size, preferences, trade policies, inward multilateral resistance.</p>
+        </div>
+        <div class="method-card">
+          <h4>Year FE (γ<sub>t</sub>)</h4>
+          <p>Controls for global shocks affecting all trade flows: oil prices, financial crises, exchange rate movements, COVID-19 pandemic.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Estimation Method: PPML</h2>
+
+      <p><strong>Poisson Pseudo-Maximum Likelihood (PPML)</strong> estimation is the gold standard for gravity models following Santos Silva & Tenreyro (2006). This approach offers four critical advantages:</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Advantage</th>
+            <th>Description</th>
+            <th>Alternative Approaches</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Zero Trade Flows</strong></td>
+            <td>Naturally handles observations with zero trade without dropping them</td>
+            <td>OLS on log(trade) drops zeros, introducing selection bias</td>
+          </tr>
+          <tr>
+            <td><strong>Heteroskedasticity</strong></td>
+            <td>Consistent estimates even when variance of trade flows varies with covariates</td>
+            <td>OLS on logs produces biased elasticity estimates</td>
+          </tr>
+          <tr>
+            <td><strong>Jensen's Inequality</strong></td>
+            <td>Avoids bias from transforming multiplicative errors to additive in logs</td>
+            <td>Log-linearization creates systematic bias</td>
+          </tr>
+          <tr>
+            <td><strong>Computational Efficiency</strong></td>
+            <td>Fast convergence with Poisson GLM algorithms, handles high-dimensional FE</td>
+            <td>Nonlinear least squares can be slow and unstable</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="highlight-box">
+        <h4>Technical Implementation</h4>
+        <p>We use <code>statsmodels.formula.api.glm()</code> with <code>family=sm.families.Poisson()</code> in Python. The Poisson family uses a log link function, so exp(α<sub>i</sub> + δ<sub>j</sub> + β'X) produces the conditional mean. Despite the "Poisson" name, the estimator remains consistent even if trade flows don't follow a true Poisson distribution—hence "pseudo" maximum likelihood.</p>
+      </div>
+
+      <p class="reference">
+        Reference: Santos Silva, J. M. C., & Tenreyro, S. (2006). The log of gravity. <em>The Review of Economics and Statistics</em>, 88(4), 641-658.
+      </p>
+    </section>
+
+    <section>
+      <h2>Data Sources & Sample Construction</h2>
+
+      <h3>BACI Trade Database (CEPII)</h3>
+      <p>Bilateral trade flows are sourced from the <strong>Base pour l'Analyse du Commerce International (BACI)</strong>, maintained by the Centre d'Études Prospectives et d'Informations Internationales (CEPII). BACI harmonizes UN COMTRADE data to ensure consistency across reporting countries.</p>
+
+      <h4>Sample Selection Criteria:</h4>
+      <ul>
+        <li><strong>Time Period:</strong> 2019-2021 (3 years)</li>
+        <li><strong>Country Coverage:</strong> Top 20 exporters × Top 20 importers = 400 country pairs × 3 years = 1,200 potential observations</li>
+        <li><strong>Final Sample:</strong> 1,032 observations after matching with gravity variables</li>
+        <li><strong>Trade Measure:</strong> Total bilateral trade value in USD millions (all products aggregated)</li>
+      </ul>
+
+      <h3>Gravity Dataset v202211 (CEPII)</h3>
+      <p>Bilateral covariates are sourced from the CEPII Gravity Dataset, which provides comprehensive bilateral variables for 200+ countries from 1948-2020.</p>
+
+      <h4>Variables Used:</h4>
+      <ul>
+        <li><strong>dist:</strong> Bilateral distance (population-weighted, in kilometers)</li>
+        <li><strong>contig:</strong> Contiguity dummy (1 if countries share a border)</li>
+        <li><strong>comlang_off:</strong> Common official language dummy</li>
+        <li><strong>comcol:</strong> Colonial relationship dummy (ever in colonial relationship)</li>
+        <li><strong>rta_coverage:</strong> Regional trade agreement coverage index</li>
+        <li><strong>gdp_o, gdp_d:</strong> Gross domestic product (current USD)</li>
+        <li><strong>pop_o, pop_d:</strong> Population (total)</li>
+      </ul>
+
+      <p class="reference">
+        Reference: Head, K., Mayer, T., & Ries, J. (2010). The erosion of colonial trade linkages after independence. <em>Journal of International Economics</em>, 81(1), 1-14.
+      </p>
+    </section>
+
+    <section>
+      <h2>Counterfactual Analysis</h2>
+
+      <p>The interactive visualization implements <strong>partial-equilibrium counterfactual analysis</strong>, allowing users to simulate trade policy scenarios by adjusting gravity parameters.</p>
+
+      <h3>Counterfactual Calculation Procedure:</h3>
+
+      <div class="equation-block">
+        <strong>Step 1: Baseline Linear Predictor</strong><br>
+        η<sub>ij</sub> = α<sub>i</sub> + δ<sub>j</sub> + γ<sub>t</sub> - θ·ln(dist<sub>ij</sub>) + β'Z<sub>ij</sub><br><br>
+
+        <strong>Step 2: Counterfactual Shock</strong><br>
+        Δη<sub>ij</sub> = (λ<sub>dist</sub> - 1) × θ × ln(dist<sub>ij</sub>) + (λ<sub>contig</sub> - 1) × β<sub>contig</sub> × contig<sub>ij</sub> + ...<br><br>
+
+        <strong>Step 3: Counterfactual Trade</strong><br>
+        X<sub>ij</sub><sup>CF</sup> = exp(η<sub>ij</sub> + Δη<sub>ij</sub>)<br><br>
+
+        <strong>Step 4: Trade Impact</strong><br>
+        ΔX<sub>ij</sub> = X<sub>ij</sub><sup>CF</sup> - X<sub>ij</sub><sup>Baseline</sup>
+      </div>
+
+      <p>Where λ parameters are the shock multipliers controlled by sliders (λ = 1 means no shock, λ = 2 means doubling the elasticity).</p>
+
+      <div class="highlight-box">
+        <h4>Partial Equilibrium Caveat</h4>
+        <p><strong>Important:</strong> This counterfactual analysis holds fixed effects constant, meaning we do <em>not</em> recompute general equilibrium effects. In reality, changes in trade costs would alter multilateral resistance terms (Π<sub>i</sub> and P<sub>j</sub>), GDP allocations, and prices. For full general equilibrium analysis, structural models with market-clearing conditions are required (e.g., Dekle, Eaton & Kortum, 2008).</p>
+        <p>Our partial-equilibrium approach provides a useful <em>first-order approximation</em> of trade impacts, suitable for scenario exploration and understanding elasticity magnitudes.</p>
+      </div>
+
+      <p class="reference">
+        Reference: Dekle, R., Eaton, J., & Kortum, S. (2008). Global rebalancing with gravity: Measuring the burden of adjustment. <em>IMF Staff Papers</em>, 55(3), 511-540.
+      </p>
+    </section>
+
+    <section>
+      <h2>Model Diagnostics & Robustness</h2>
+
+      <h3>Estimation Quality Checks:</h3>
+      <ul>
+        <li><strong>Convergence:</strong> PPML algorithm converges within standard tolerance (GLM default: 1e-8)</li>
+        <li><strong>Coefficient Stability:</strong> Parameter estimates are stable across different starting values</li>
+        <li><strong>Fixed Effects:</strong> High R² indicates fixed effects capture substantial variation</li>
+        <li><strong>Residual Analysis:</strong> Examine residuals for systematic patterns or outliers</li>
+      </ul>
+
+      <h3>Interpretation Guidelines:</h3>
+
+      <div class="method-grid">
+        <div class="method-card">
+          <h4>Distance Elasticity (θ)</h4>
+          <p>Coefficient on ln(distance). Typical range: -0.5 to -1.5. A value of -0.85 means 10% increase in distance → 8.5% decrease in trade.</p>
+        </div>
+        <div class="method-card">
+          <h4>Contiguity Effect</h4>
+          <p>Dummy for shared border. Typical range: 0.3 to 0.8. Coefficient of 0.45 → exp(0.45) ≈ 1.57, meaning 57% higher trade.</p>
+        </div>
+        <div class="method-card">
+          <h4>Language Effect</h4>
+          <p>Common official language. Typical range: 0.2 to 0.5. Reflects lower communication costs and cultural affinity.</p>
+        </div>
+        <div class="method-card">
+          <h4>Colonial Ties</h4>
+          <p>Historical colonial relationship. Typical range: 0.2 to 0.6. Captures persistent trade networks and institutional similarities.</p>
+        </div>
+      </div>
+
+      <h3>Limitations & Extensions:</h3>
+      <ul>
+        <li><strong>Aggregation:</strong> Analysis uses total trade (all products). Sector-level analysis could reveal heterogeneous effects.</li>
+        <li><strong>Time Period:</strong> 2019-2021 includes COVID-19 disruptions. Longer time series would improve robustness.</li>
+        <li><strong>Country Coverage:</strong> Focus on top 20 countries excludes smaller traders and developing economies.</li>
+        <li><strong>Endogeneity:</strong> RTAs may be endogenous to trade patterns. Instrumental variables could address this.</li>
+        <li><strong>Dynamics:</strong> Static model doesn't capture trade adjustment lags or anticipation effects.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Further Reading</h2>
+
+      <h3>Foundational Papers:</h3>
+      <ol>
+        <li>Anderson, J. E., & van Wincoop, E. (2003). Gravity with gravitas: A solution to the border puzzle. <em>American Economic Review</em>, 93(1), 170-192.</li>
+        <li>Santos Silva, J. M. C., & Tenreyro, S. (2006). The log of gravity. <em>The Review of Economics and Statistics</em>, 88(4), 641-658.</li>
+        <li>Head, K., & Mayer, T. (2014). Gravity equations: Workhorse, toolkit, and cookbook. In <em>Handbook of International Economics</em> (Vol. 4, pp. 131-195). Elsevier.</li>
+      </ol>
+
+      <h3>Advanced Topics:</h3>
+      <ol>
+        <li>Yotov, Y. V., et al. (2016). <em>An advanced guide to trade policy analysis: The structural gravity model</em>. UN and WTO.</li>
+        <li>Arkolakis, C., Costinot, A., & Rodríguez-Clare, A. (2012). New trade models, same old gains? <em>American Economic Review</em>, 102(1), 94-130.</li>
+        <li>Fally, T. (2015). Structural gravity and fixed effects. <em>Journal of International Economics</em>, 97(1), 76-85.</li>
+      </ol>
+
+      <h3>Data Resources:</h3>
+      <ul>
+        <li><strong>BACI:</strong> <a href="http://www.cepii.fr/CEPII/en/bdd_modele/bdd.asp" target="_blank">http://www.cepii.fr/CEPII/en/bdd_modele/bdd.asp</a></li>
+        <li><strong>CEPII Gravity:</strong> <a href="http://www.cepii.fr/CEPII/en/bdd_modele/presentation.asp?id=8" target="_blank">http://www.cepii.fr/CEPII/en/bdd_modele/presentation.asp?id=8</a></li>
+        <li><strong>UN COMTRADE:</strong> <a href="https://comtrade.un.org/" target="_blank">https://comtrade.un.org/</a></li>
+      </ul>
+    </section>
+  </div>
+
+  <footer>
+    <p>&copy; 2026 Ian Helfrich | <a href="https://github.com/ihelfrich/test_repo">View on GitHub</a></p>
+    <p>Built with Python, Three.js, and econometric best practices</p>
+  </footer>
+</body>
+</html>

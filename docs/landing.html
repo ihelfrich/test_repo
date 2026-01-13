@@ -95,6 +95,48 @@
             margin-right: 10px;
         }
 
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(12px);
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        nav .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+        }
+
+        nav .logo {
+            font-size: 18px;
+            font-weight: 700;
+            color: white;
+        }
+
+        nav ul {
+            display: flex;
+            gap: 32px;
+            list-style: none;
+        }
+
+        nav a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        nav a:hover {
+            color: white;
+        }
+
         .cta-buttons {
             display: flex;
             gap: 1rem;
@@ -302,6 +344,20 @@
     </style>
 </head>
 <body>
+    <!-- Navigation -->
+    <nav>
+        <div class="container">
+            <div class="logo">Gravity Trade Analysis</div>
+            <ul>
+                <li><a href="landing.html">Home</a></li>
+                <li><a href="executive-summary.html">Executive Summary</a></li>
+                <li><a href="index.html">Interactive Tool</a></li>
+                <li><a href="methodology.html">Methodology</a></li>
+                <li><a href="https://github.com/ihelfrich/test_repo" target="_blank">GitHub</a></li>
+            </ul>
+        </div>
+    </nav>
+
     <!-- Hero Section -->
     <section class="hero">
         <div class="container">
@@ -322,10 +378,13 @@
 
                 <div class="cta-buttons">
                     <a href="index.html" class="btn btn-primary">
-                        🚀 Launch Interactive Demo
+                        🚀 Launch Interactive Tool
                     </a>
-                    <a href="https://github.com/ihelfrich/test_repo" class="btn btn-secondary">
-                        📂 View on GitHub
+                    <a href="executive-summary.html" class="btn btn-secondary">
+                        📊 Executive Summary
+                    </a>
+                    <a href="methodology.html" class="btn btn-secondary">
+                        📖 Methodology
                     </a>
                 </div>
             </div>

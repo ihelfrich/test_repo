@@ -231,9 +231,76 @@
         height: 56vh;
       }
     }
+
+    nav {
+      background: var(--panel);
+      border-bottom: 1px solid var(--grid);
+      padding: 12px 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px var(--shadow);
+    }
+
+    nav .nav-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 clamp(18px, 5vw, 64px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    nav .logo {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 24px;
+      margin: 0;
+      padding: 0;
+    }
+
+    nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    nav a:hover {
+      color: var(--accent-dark);
+    }
+
+    @media (max-width: 768px) {
+      nav ul {
+        gap: 12px;
+      }
+      nav a {
+        font-size: 12px;
+      }
+    }
   </style>
 </head>
 <body>
+  <nav>
+    <div class="nav-container">
+      <div class="logo">Gravity Trade Analysis</div>
+      <ul>
+        <li><a href="landing.html">Home</a></li>
+        <li><a href="executive-summary.html">Summary</a></li>
+        <li><a href="index.html">Tool</a></li>
+        <li><a href="methodology.html">Methodology</a></li>
+        <li><a href="https://github.com/ihelfrich/test_repo">GitHub</a></li>
+      </ul>
+    </div>
+  </nav>
+
   <header>
     <h1 class="title">Counterfactual Gravity Shock Explorer</h1>
     <p class="subtitle">
