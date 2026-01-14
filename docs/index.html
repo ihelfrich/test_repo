@@ -604,11 +604,15 @@
 
     const init = async () => {
       try {
+        console.log('[INIT] Starting initialization...');
         meta.textContent = `Loading data from ${dataUrl} ...`;
+        console.log('[INIT] Fetching data from:', dataUrl);
         const payload = await fetchData();
+        console.log('[INIT] Data fetched successfully:', payload.rows.length, 'rows');
         const rows = payload.rows;
         const metaInfo = payload.meta;
         const coeffs = metaInfo.coefficients || {};
+        console.log('[INIT] Coefficients:', coeffs);
 
         const getCoeff = (key) => (key in coeffs ? coeffs[key] : 0);
 
@@ -699,9 +703,12 @@
           control.addEventListener("input", updateState)
         );
 
+        console.log('[INIT] Calling updateState for first render...');
         updateState();
+        console.log('[INIT] First render complete, points created:', !!points);
 
         container.addEventListener("mousemove", (event) => {
+          if (!points) return; // Guard against null points
           const rect = container.getBoundingClientRect();
           pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
           pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
@@ -726,12 +733,15 @@
           }
         });
       } catch (err) {
+        console.error('[INIT] ERROR:', err);
         meta.innerHTML = `
           <div><strong>Data load failed:</strong> ${err.message}</div>
-          <div>Fixes:</div>
+          <div style="margin-top:10px;"><strong>Stack:</strong> <pre style="font-size:10px;overflow-x:auto;">${err.stack}</pre></div>
+          <div style="margin-top:10px;"><strong>Fixes:</strong></div>
           <div>1) Serve via GitHub Pages (Settings → Pages → main /docs).</div>
           <div>2) Or run: python3 -m http.server --directory docs</div>
           <div>3) Then open: http://localhost:8000</div>
+          <div>4) Check browser console (F12) for details</div>
         `;
       }
     };
