@@ -27,6 +27,15 @@
     <div id="status">Initializing...</div>
     <div id="container"></div>
 
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+            }
+        }
+    </script>
+
     <script type="module">
         const statusEl = document.getElementById('status');
         const container = document.getElementById('container');
@@ -38,7 +47,7 @@
 
         try {
             updateStatus('Step 1: Loading Three.js...', 'info');
-            const THREE = await import("https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js");
+            const THREE = await import("three");
             updateStatus(`✓ Three.js r${THREE.REVISION} loaded`, 'success');
 
             updateStatus('Step 2: Creating scene...', 'info');
@@ -54,7 +63,7 @@
             updateStatus('✓ Scene, camera, renderer created', 'success');
 
             updateStatus('Step 3: Loading OrbitControls...', 'info');
-            const { OrbitControls } = await import("https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/controls/OrbitControls.js");
+            const { OrbitControls } = await import("three/addons/controls/OrbitControls.js");
             const controls = new OrbitControls(camera, renderer.domElement);
             updateStatus('✓ OrbitControls loaded', 'success');
 
