@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Load Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #00ff00;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #333;
+            border-radius: 4px;
+        }
+        .success { background: #002200; border-color: #00ff00; }
+        .error { background: #220000; border-color: #ff0000; color: #ff0000; }
+        .info { background: #002222; border-color: #00ffff; color: #00ffff; }
+        pre {
+            background: #000;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Interactive Visualization Diagnostics</h1>
+    <div id="results"></div>
+
+    <script type="module">
+        const results = document.getElementById('results');
+
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+        }
+
+        async function runDiagnostics() {
+            // Test 1: Check protocol
+            log(`<strong>Test 1: Protocol Check</strong><br>Protocol: ${window.location.protocol}`,
+                window.location.protocol === 'file:' ? 'error' : 'success');
+
+            // Test 2: Check Three.js CDN
+            try {
+                const THREE = await import("https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js");
+                log(`<strong>Test 2: Three.js CDN</strong><br>✓ Three.js v${THREE.REVISION} loaded successfully`, 'success');
+            } catch (err) {
+                log(`<strong>Test 2: Three.js CDN</strong><br>✗ Failed: ${err.message}`, 'error');
+            }
+
+            // Test 3: Check OrbitControls
+            try {
+                const { OrbitControls } = await import("https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/controls/OrbitControls.js");
+                log(`<strong>Test 3: OrbitControls</strong><br>✓ OrbitControls loaded successfully`, 'success');
+            } catch (err) {
+                log(`<strong>Test 3: OrbitControls</strong><br>✗ Failed: ${err.message}`, 'error');
+            }
+
+            // Test 4: Data file fetch
+            try {
+                const dataUrl = new URL("data/baci_gravity_viz.json", window.location.href).href;
+                log(`<strong>Test 4: Data File Fetch</strong><br>Attempting: ${dataUrl}`, 'info');
+
+                const response = await fetch(dataUrl, { cache: "no-store" });
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                log(`<strong>Test 4: Data File Fetch</strong><br>✓ Data loaded successfully<br>
+                    • Rows: ${data.rows.length}<br>
+                    • Years: ${data.meta.years.join(', ')}<br>
+                    • Coefficients: ${Object.keys(data.meta.coefficients).length}`, 'success');
+
+                // Display sample data
+                const sampleRow = data.rows[0];
+                log(`<strong>Sample Data Row:</strong><pre>${JSON.stringify(sampleRow, null, 2)}</pre>`, 'info');
+
+            } catch (err) {
+                log(`<strong>Test 4: Data File Fetch</strong><br>✗ Failed: ${err.message}`, 'error');
+            }
+
+            // Test 5: WebGL Support
+            try {
+                const canvas = document.createElement('canvas');
+                const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                if (gl) {
+                    const renderer = gl.getParameter(gl.RENDERER);
+                    const vendor = gl.getParameter(gl.VENDOR);
+                    log(`<strong>Test 5: WebGL Support</strong><br>✓ WebGL available<br>
+                        • Renderer: ${renderer}<br>
+                        • Vendor: ${vendor}`, 'success');
+                } else {
+                    throw new Error('WebGL not available');
+                }
+            } catch (err) {
+                log(`<strong>Test 5: WebGL Support</strong><br>✗ Failed: ${err.message}`, 'error');
+            }
+
+            // Test 6: Browser Console Check
+            log(`<strong>Test 6: Console Check</strong><br>
+                Check browser console (F12) for additional errors.<br>
+                Common issues:<br>
+                • CORS errors (should not happen on GitHub Pages)<br>
+                • Module loading errors<br>
+                • JavaScript exceptions`, 'info');
+
+            log(`<strong>Diagnostics Complete</strong><br>
+                If all tests pass but visualization doesn't work:<br>
+                1. Check browser console (F12) for errors<br>
+                2. Try hard refresh (Ctrl+Shift+R or Cmd+Shift+R)<br>
+                3. Try different browser (Chrome, Firefox, Safari)<br>
+                4. Check if ad blockers are interfering`, 'info');
+        }
+
+        runDiagnostics().catch(err => {
+            log(`<strong>Fatal Error</strong><br>${err.message}<br><pre>${err.stack}</pre>`, 'error');
+        });
+    </script>
+</body>
+</html>
