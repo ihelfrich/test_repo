@@ -7,7 +7,7 @@
 
 > **Interactive 3D visualization and econometric analysis of international trade flows using PPML gravity models**
 
-[**🚀 View Live Demo**](https://ihelfrich.github.io/test_repo/) • [**📊 See Visualizations**](#visualizations) • [**📖 Read Documentation**](#documentation)
+[**🚀 Launch Interactive Tool**](https://ihelfrich.github.io/test_repo/) • [**📊 Executive Summary**](https://ihelfrich.github.io/test_repo/executive-summary.html) • [**📖 Full Methodology**](https://ihelfrich.github.io/test_repo/methodology.html) • [**🏠 Project Home**](https://ihelfrich.github.io/test_repo/landing.html)
 
 ---
 
@@ -18,7 +18,8 @@ This project implements a state-of-the-art **Poisson Pseudo-Maximum Likelihood (
 - 🎨 **Interactive 3D Visualization** - Explore trade patterns in a beautiful three.js-powered interface
 - 📈 **Rigorous Econometrics** - Anderson-van Wincoop (2003) structural gravity with multilateral resistance
 - 🌐 **Web-Based Dashboard** - No installation required, runs entirely in the browser
-- 📊 **Comprehensive Analytics** - Detailed statistics, coefficients, and diagnostic visualizations
+- 📊 **Executive Summary** - Consultant-quality report with policy implications and key findings
+- 📖 **Full Methodology** - Publication-grade technical documentation with equations and references
 - 🚀 **Production-Ready** - Deployed on GitHub Pages, mobile-responsive, fast
 
 ### Key Features
@@ -45,6 +46,43 @@ This project implements a state-of-the-art **Poisson Pseudo-Maximum Likelihood (
 - 🎛️ **Dynamic Controls** - Switch years and metrics in real-time
 - 🎨 **Color-Coded** - Blue (underperforming) to Red (overperforming) gradient
 - 📏 **Variable Sizing** - Point size reflects trade volume
+
+---
+
+## 📚 Documentation
+
+This project includes comprehensive documentation suitable for academic, policy, and professional audiences:
+
+### [📊 Executive Summary](https://ihelfrich.github.io/test_repo/executive-summary.html)
+**Audience:** Policymakers, business strategists, consultants
+
+Consultant-quality report featuring:
+- Key statistics and findings at a glance
+- Gravity model estimates with policy interpretations
+- Implications for trade policy and business strategy
+- Methodology overview for non-technical readers
+- Reference to academic literature
+
+### [📖 Full Methodology](https://ihelfrich.github.io/test_repo/methodology.html)
+**Audience:** Researchers, economists, graduate students
+
+Publication-grade technical documentation covering:
+- Theoretical foundation (Anderson-van Wincoop framework)
+- Empirical specification with fixed effects structure
+- PPML estimation justification and advantages
+- Data sources and sample construction details
+- Counterfactual analysis procedures with caveats
+- Model diagnostics and robustness checks
+- Comprehensive reference list
+
+### [🏠 Project Landing Page](https://ihelfrich.github.io/test_repo/landing.html)
+**Audience:** General public, portfolio viewers
+
+Professional showcase featuring:
+- Project overview and key features
+- Quick-access navigation to all resources
+- Visual design optimized for first impressions
+- Links to GitHub repository and documentation
 
 ---
 
