@@ -518,11 +518,12 @@
       };
     }
 
-    function renderResults(results, theta) {
+    function renderResults(results, theta, baseline = null) {
       const countries = payload.meta.countries;
       const names = payload.meta.country_names || {};
 
-      const welfareChanges = results.welfare.map(value => (value - 1) * 100);
+      const baseWelfare = baseline && baseline.welfare ? baseline.welfare : Array(results.welfare.length).fill(1);
+      const welfareChanges = results.welfare.map((value, idx) => (value / Math.max(baseWelfare[idx], 1e-9) - 1) * 100);
       const avgW = welfareChanges.reduce((a, b) => a + b, 0) / welfareChanges.length;
 
       const entries = countries.map((iso, idx) => ({
@@ -615,9 +616,28 @@
         }
       }
 
+      if (rate === 0) {
+        const base = {
+          welfare: Array(payload.meta.countries.length).fill(1),
+          exports: payload.by_year[yearKey].exports_pred,
+          imports: payload.by_year[yearKey].imports_pred,
+          exports_cf: payload.by_year[yearKey].exports_pred,
+          imports_cf: payload.by_year[yearKey].imports_pred,
+          flows: payload.by_year[yearKey].flows_pred,
+          flows_cf: payload.by_year[yearKey].flows_pred
+        };
+        renderResults(base, theta, base);
+        statusPill.textContent = 'Baseline';
+        runBtn.disabled = false;
+        return;
+      }
+
       try {
+        const baseline = {
+          welfare: Array(payload.meta.countries.length).fill(1)
+        };
         const results = solveCounterfactual(yearKey, shock, theta);
-        renderResults(results, theta);
+        renderResults(results, theta, baseline);
         statusPill.textContent = 'Updated';
       } catch (err) {
         console.warn('Simulation failed', err);

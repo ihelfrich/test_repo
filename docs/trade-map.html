@@ -359,7 +359,7 @@
     crossorigin=""
   ></script>
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/d3-geo@3/dist/d3-geo.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0/turf.min.js"></script>
   <script>
     const dataUrl = new URL('data/baci_gravity_viz.json', window.location.href).href;
     const isoMapUrl = new URL('data/iso3_numeric_map.json', window.location.href).href;
@@ -566,26 +566,35 @@
       const codeMap = isoMap.codes || {};
 
       centroids = {};
-      features.forEach(feature => {
-        const code = parseInt(feature.id, 10);
-        const entry = codeMap[code];
-        if (!entry || !entry.iso3) return;
-        const centroid = d3.geoCentroid(feature);
-        if (!Number.isFinite(centroid[0]) || !Number.isFinite(centroid[1])) return;
-        centroids[entry.iso3] = {
-          lat: centroid[1],
-          lon: centroid[0],
-          name: entry.name || entry.iso3
-        };
-      });
-
-      L.geoJSON(features, {
+      const geoLayer = L.geoJSON(features, {
         style: {
           color: '#2a3a52',
           weight: 1,
           fillOpacity: 0.05
         }
       }).addTo(map);
+
+      features.forEach(feature => {
+        const code = String(feature.id);
+        const entry = codeMap[code];
+        if (!entry || !entry.iso3) return;
+        try {
+          const center = turf.centroid(feature).geometry.coordinates;
+          if (!center || center.length < 2) return;
+          const lon = center[0];
+          const lat = center[1];
+          if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+          centroids[entry.iso3] = {
+            lat,
+            lon,
+            name: entry.name || entry.iso3
+          };
+        } catch (e) {
+          console.warn('Centroid calc failed for', entry.iso3, e);
+        }
+      });
+
+      return geoLayer;
     }
 
     async function loadTradeData() {
