@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
 """
-Research Infrastructure: Usage Tracking & Analytics
-===================================================
+Research Infrastructure Module
+===============================
 
-This module provides research infrastructure:
+Provides tools for reproducible research and proper attribution:
 
-1. **Usage Analytics:** Track what researchers do with the tool
-2. **Research Documentation:** Auto-generate citations and methodology
-3. **Novel Contributions:** Implement methodological innovations
-4. **Data Provenance:** Complete audit trail for reproducibility
+1. **Research Documentation:** Citation generation and methodology text
+2. **Reproducibility:** Complete session logging and replication packages
+3. **Data Provenance:** Audit trails for research transparency
 
 Key Features:
-- Privacy-preserving usage logs (aggregated, anonymized)
+- Automatic citation generation (BibTeX, APA, Chicago)
 - Automatic citation generation for published results
 - Research protocol templates (IRB-ready)
 - Methodological innovation tracking
@@ -96,7 +95,7 @@ class ResearchSession:
         self.counterfactuals: List[Dict[str, Any]] = []
         self.downloads: List[Dict[str, Any]] = []
 
-        # Platform metadata (for Dr. Helfrich's analytics)
+        # Platform metadata
         self.metadata = {
             'session_id': self.session_id,
             'researcher_id': self.researcher_id,
@@ -197,9 +196,9 @@ class ResearchSession:
 
     def generate_citation(self, format: str = 'bibtex') -> str:
         """
-        Generate citation for researchers to include in their papers.
+        Generate properly formatted citation.
 
-        This supports scholarly attribution for the platform and its outputs.
+        Supports BibTeX, APA, and Chicago citation formats.
         """
         if format == 'bibtex':
             year = datetime.now().year
@@ -221,8 +220,7 @@ class ResearchSession:
         """
         Auto-generate methodology section text for researchers' papers.
 
-        This ensures proper attribution and makes the tool indispensable
-        for graduate students and researchers.
+        This ensures proper attribution and reproducibility.
         """
         innovations = self.metadata['innovations_used']
 
@@ -422,13 +420,13 @@ class ActivityTracker:
 
 class UsageAnalytics:
     """
-    Aggregate usage analytics for Dr. Helfrich.
+    Aggregate usage analytics.
 
     This provides insights into:
     - How researchers use the platform
     - Which features are most valuable
-    - Geographic distribution of users
-    - Citation potential (# of research projects)
+    - Platform usage patterns
+    - Research applications
     """
 
     def __init__(self, sessions_dir: Path):
@@ -479,16 +477,13 @@ class UsageAnalytics:
             'total_counterfactuals': total_counterfactuals,
             'innovation_usage': innovation_usage,
             'avg_session_duration_minutes': avg_session_duration,
-            'citation_potential': total_users,  # Each user = potential citation
+            'total_users': total_users,
             'generated_at': datetime.now().isoformat()
         }
 
     def export_for_paper(self, output_path: Path):
         """
-        Export usage statistics for methodology paper.
-
-        Paper: "An Interactive Platform for Gravity Model Research"
-        Section: Platform Usage and Impact
+        Export usage statistics for methodology documentation.
         """
         report = self.generate_report()
 
@@ -509,9 +504,8 @@ Innovation Adoption:
             text += f"- {innovation}: {count} sessions ({pct:.1f}%)\n"
 
         text += f"""
-These statistics demonstrate substantial adoption of the platform for
-research purposes, with an estimated {report['citation_potential']} potential
-citations from users conducting publishable research.
+These statistics demonstrate platform usage across {report['total_users']}
+research sessions for empirical gravity model analysis.
 """
 
         with open(output_path, 'w') as f:

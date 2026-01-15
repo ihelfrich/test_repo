@@ -1,15 +1,37 @@
-# Data (kept external or limited in size)
-/data/raw/
-/data/interim/
-/data/processed/
-/data/external/
+# Private strategy documents (not for public viewing)
+private_notes/
+CAREER_*.md
+*_IMPACT.md
+*_ROADMAP.md
+*STRATEGY*
 
-# Notebook checkpoints
-/notebooks/.ipynb_checkpoints/
+# Data files (too large)
+data/processed/
+*.parquet
+*.arrow
 
-# Local env files
-.env
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+*.egg-info/
+dist/
+build/
 
-# Virtual environments
-/baileym_test/
-/venv/
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
