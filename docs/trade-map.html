@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Trade Map Explorer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: #0f1c2f;
+      --panel-alt: #13253b;
+      --ink: #e9eef5;
+      --muted: #8a96a8;
+      --accent: #2f9c95;
+      --accent-warm: #f4b34a;
+      --danger: #f97316;
+      --grid: rgba(233, 238, 245, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Sora", sans-serif;
+      background: radial-gradient(circle at 20% 20%, #1a2b44 0%, #0b1220 55%, #080f18 100%);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(12px);
+      background: rgba(11, 18, 32, 0.92);
+      border-bottom: 1px solid rgba(233, 238, 245, 0.08);
+    }
+
+    .nav-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 32px;
+    }
+
+    .logo {
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      color: var(--ink);
+    }
+
+    nav ul {
+      display: flex;
+      gap: 22px;
+      list-style: none;
+      flex-wrap: wrap;
+    }
+
+    nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+    }
+
+    nav a:hover {
+      color: var(--ink);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(280px, 340px) 1fr;
+      min-height: calc(100vh - 64px);
+    }
+
+    .sidebar {
+      background: rgba(15, 28, 47, 0.96);
+      border-right: 1px solid rgba(233, 238, 245, 0.08);
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .sidebar h1 {
+      font-size: 22px;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #2f9c95 0%, #f4b34a 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+      margin-bottom: 18px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid rgba(233, 238, 245, 0.06);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 16px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .panel h2 {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1.4px;
+      color: var(--accent-warm);
+      margin-bottom: 12px;
+    }
+
+    label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    select,
+    input[type="range"] {
+      width: 100%;
+      margin-bottom: 12px;
+    }
+
+    select {
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(233, 238, 245, 0.12);
+      background: #0f1825;
+      color: var(--ink);
+      font-family: inherit;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(148, 163, 184, 0.2);
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #2f9c95, #f4b34a);
+      cursor: pointer;
+    }
+
+    .value {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 12px;
+      color: var(--ink);
+      margin-top: -8px;
+      margin-bottom: 12px;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .stat {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+      padding: 10px;
+      border: 1px solid rgba(233, 238, 245, 0.06);
+    }
+
+    .stat span {
+      display: block;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .stat strong {
+      font-size: 15px;
+      font-family: "IBM Plex Mono", monospace;
+      color: var(--ink);
+    }
+
+    .note {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 10px;
+    }
+
+    .map-wrap {
+      position: relative;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+      min-height: 60vh;
+      border-left: 1px solid rgba(233, 238, 245, 0.08);
+    }
+
+    .legend {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(233, 238, 245, 0.1);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 11px;
+      color: var(--ink);
+      backdrop-filter: blur(10px);
+    }
+
+    .legend-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .legend-color {
+      width: 18px;
+      height: 8px;
+      border-radius: 4px;
+      background: linear-gradient(90deg, #2f9c95, #f4b34a);
+    }
+
+    @media (max-width: 1100px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      #map {
+        min-height: 65vh;
+        border-left: none;
+        border-top: 1px solid rgba(233, 238, 245, 0.08);
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-container">
+      <div class="logo">Gravity Trade Analysis</div>
+      <ul>
+        <li><a href="landing.html">Home</a></li>
+        <li><a href="index.html">Tool</a></li>
+        <li><a href="trade-sphere.html">Trade Sphere</a></li>
+        <li><a href="trade-map.html">Trade Map</a></li>
+        <li><a href="residual-surface.html">Residual Surface</a></li>
+        <li><a href="model-lab.html">Model Lab</a></li>
+        <li><a href="topology.html">Topology</a></li>
+        <li><a href="advanced_topology.html">Research Lab</a></li>
+        <li><a href="methodology.html">Methodology</a></li>
+        <li><a href="https://github.com/ihelfrich/test_repo">GitHub</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <h1>Trade Map Explorer</h1>
+      <p class="subtitle">
+        Interactive geographic view of bilateral trade flows. Filter by year,
+        metric, and scale. Lines represent dyads; node size scales with total trade.
+      </p>
+
+      <div class="panel">
+        <h2>Filters</h2>
+        <label>Year <span id="yearLabel">-</span></label>
+        <select id="yearSelect"></select>
+
+        <label>Metric</label>
+        <select id="metricSelect">
+          <option value="trade_value_usd_millions">Observed trade (USD M)</option>
+          <option value="trade_pred">Predicted trade (default model)</option>
+          <option value="log_trade_gap">Residual (log gap)</option>
+        </select>
+
+        <label>Top flows <span id="topNLabel">150</span></label>
+        <input type="range" id="topN" min="25" max="300" step="25" value="150" />
+        <div class="value">Top N dyads per year.</div>
+
+        <label>Min trade (USD M) <span id="minTradeLabel">1000</span></label>
+        <input type="range" id="minTrade" min="0" max="20000" step="250" value="1000" />
+        <div class="value">Filter out small flows for clarity.</div>
+      </div>
+
+      <div class="panel">
+        <h2>Snapshot</h2>
+        <div class="stat-grid">
+          <div class="stat">
+            <span>Total trade</span>
+            <strong id="totalTrade">-</strong>
+          </div>
+          <div class="stat">
+            <span>Flows shown</span>
+            <strong id="flowCount">-</strong>
+          </div>
+          <div class="stat">
+            <span>Countries</span>
+            <strong id="countryCount">-</strong>
+          </div>
+          <div class="stat">
+            <span>Metric range</span>
+            <strong id="metricRange">-</strong>
+          </div>
+        </div>
+        <div class="note" id="dataNote">Loading map data…</div>
+      </div>
+    </aside>
+
+    <main class="map-wrap">
+      <div id="map"></div>
+      <div class="legend">
+        <div>Line intensity</div>
+        <div class="legend-row">
+          <div class="legend-color"></div>
+          <span>Higher trade volume</span>
+        </div>
+        <div class="legend-row">
+          <div class="legend-color" style="background: linear-gradient(90deg, #f97316, #2f9c95);"></div>
+          <span>Residuals: negative → positive</span>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3-geo@3/dist/d3-geo.min.js"></script>
+  <script>
+    const dataUrl = new URL('data/baci_gravity_viz.json', window.location.href).href;
+    const isoMapUrl = new URL('data/iso3_numeric_map.json', window.location.href).href;
+    const topoUrl = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json';
+
+    const yearSelect = document.getElementById('yearSelect');
+    const yearLabel = document.getElementById('yearLabel');
+    const metricSelect = document.getElementById('metricSelect');
+    const topNSlider = document.getElementById('topN');
+    const topNLabel = document.getElementById('topNLabel');
+    const minTradeSlider = document.getElementById('minTrade');
+    const minTradeLabel = document.getElementById('minTradeLabel');
+    const totalTrade = document.getElementById('totalTrade');
+    const flowCount = document.getElementById('flowCount');
+    const countryCount = document.getElementById('countryCount');
+    const metricRange = document.getElementById('metricRange');
+    const dataNote = document.getElementById('dataNote');
+
+    const map = L.map('map', { zoomControl: false }).setView([20, 0], 2);
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 6,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    const flowLayer = L.layerGroup().addTo(map);
+    const nodeLayer = L.layerGroup().addTo(map);
+
+    let centroids = {};
+    let tradeRows = [];
+    let yearIndex = new Map();
+
+    const metricMeta = {
+      trade_value_usd_millions: { label: 'Observed trade (USD M)', diverging: false },
+      trade_pred: { label: 'Predicted trade (USD M)', diverging: false },
+      log_trade_gap: { label: 'Residual (log gap)', diverging: true }
+    };
+
+    function formatNumber(value, digits = 2) {
+      if (!Number.isFinite(value)) return '-';
+      return value.toLocaleString(undefined, { maximumFractionDigits: digits });
+    }
+
+    function toRad(deg) {
+      return deg * Math.PI / 180;
+    }
+
+    function toDeg(rad) {
+      return rad * 180 / Math.PI;
+    }
+
+    function greatCircle(lat1, lon1, lat2, lon2, steps = 24) {
+      const phi1 = toRad(lat1);
+      const phi2 = toRad(lat2);
+      const lam1 = toRad(lon1);
+      const lam2 = toRad(lon2);
+
+      const sinDphi = Math.sin((phi2 - phi1) / 2);
+      const sinDlam = Math.sin((lam2 - lam1) / 2);
+      const a = sinDphi * sinDphi + Math.cos(phi1) * Math.cos(phi2) * sinDlam * sinDlam;
+      const delta = 2 * Math.asin(Math.min(1, Math.sqrt(a)));
+
+      if (delta === 0) return [[lat1, lon1], [lat2, lon2]];
+
+      const points = [];
+      for (let i = 0; i <= steps; i++) {
+        const f = i / steps;
+        const A = Math.sin((1 - f) * delta) / Math.sin(delta);
+        const B = Math.sin(f * delta) / Math.sin(delta);
+        const x = A * Math.cos(phi1) * Math.cos(lam1) + B * Math.cos(phi2) * Math.cos(lam2);
+        const y = A * Math.cos(phi1) * Math.sin(lam1) + B * Math.cos(phi2) * Math.sin(lam2);
+        const z = A * Math.sin(phi1) + B * Math.sin(phi2);
+        const phi = Math.atan2(z, Math.sqrt(x * x + y * y));
+        const lam = Math.atan2(y, x);
+        points.push([toDeg(phi), toDeg(lam)]);
+      }
+      return points;
+    }
+
+    function buildYearIndex(rows) {
+      yearIndex = new Map();
+      rows.forEach(row => {
+        if (!yearIndex.has(row.year)) yearIndex.set(row.year, []);
+        yearIndex.get(row.year).push(row);
+      });
+    }
+
+    function updateMap() {
+      const year = parseInt(yearSelect.value, 10);
+      const metricKey = metricSelect.value;
+      const minTrade = parseFloat(minTradeSlider.value);
+      const topN = parseInt(topNSlider.value, 10);
+      const rows = yearIndex.get(year) || [];
+
+      yearLabel.textContent = year;
+      topNLabel.textContent = topN;
+      minTradeLabel.textContent = minTrade;
+
+      const filtered = rows.filter(row =>
+        row.trade_value_usd_millions >= minTrade &&
+        centroids[row.iso_o] &&
+        centroids[row.iso_d]
+      );
+
+      const metricValues = filtered.map(row => {
+        const val = row[metricKey] ?? 0;
+        return metricKey === 'log_trade_gap' ? Math.abs(val) : val;
+      });
+      const maxVal = Math.max(...metricValues, 1);
+
+      const sorted = filtered.slice().sort((a, b) => {
+        const va = metricKey === 'log_trade_gap' ? Math.abs(a[metricKey]) : a[metricKey];
+        const vb = metricKey === 'log_trade_gap' ? Math.abs(b[metricKey]) : b[metricKey];
+        return (vb || 0) - (va || 0);
+      });
+
+      const flows = sorted.slice(0, topN);
+
+      flowLayer.clearLayers();
+      nodeLayer.clearLayers();
+
+      const totals = {};
+      flows.forEach(row => {
+        totals[row.iso_o] = (totals[row.iso_o] || 0) + row.trade_value_usd_millions;
+        totals[row.iso_d] = (totals[row.iso_d] || 0) + row.trade_value_usd_millions;
+      });
+
+      const maxTotal = Math.max(...Object.values(totals), 1);
+
+      flows.forEach(row => {
+        const origin = centroids[row.iso_o];
+        const dest = centroids[row.iso_d];
+        if (!origin || !dest) return;
+
+        const rawVal = row[metricKey] ?? 0;
+        const scaleVal = metricKey === 'log_trade_gap' ? Math.abs(rawVal) : rawVal;
+        const weight = 1 + 5 * Math.sqrt(scaleVal / maxVal);
+        const color = metricKey === 'log_trade_gap'
+          ? (rawVal >= 0 ? '#2f9c95' : '#f97316')
+          : '#2f9c95';
+
+        const path = greatCircle(origin.lat, origin.lon, dest.lat, dest.lon, 24);
+        const line = L.polyline(path, {
+          color,
+          weight,
+          opacity: 0.6
+        });
+
+        line.bindTooltip(
+          `${row.iso_o} → ${row.iso_d}<br>${metricMeta[metricKey].label}: ${formatNumber(rawVal, 2)}`,
+          { sticky: true }
+        );
+        line.addTo(flowLayer);
+      });
+
+      Object.entries(totals).forEach(([iso, value]) => {
+        const point = centroids[iso];
+        if (!point) return;
+        const radius = 4 + 10 * Math.sqrt(value / maxTotal);
+        const marker = L.circleMarker([point.lat, point.lon], {
+          radius,
+          fillColor: '#f4b34a',
+          color: '#0b1220',
+          weight: 1,
+          fillOpacity: 0.8
+        });
+        marker.bindTooltip(
+          `${iso} · ${point.name}<br>Total trade: ${formatNumber(value, 0)} USD M`,
+          { sticky: true }
+        );
+        marker.addTo(nodeLayer);
+      });
+
+      const totalTradeVal = flows.reduce((sum, row) => sum + row.trade_value_usd_millions, 0);
+      totalTrade.textContent = formatNumber(totalTradeVal, 0);
+      flowCount.textContent = flows.length;
+      countryCount.textContent = Object.keys(totals).length;
+      metricRange.textContent = `${formatNumber(Math.min(...metricValues), 2)} → ${formatNumber(maxVal, 2)}`;
+    }
+
+    async function loadCentroids() {
+      const [topo, isoMap] = await Promise.all([
+        fetch(topoUrl, { cache: 'no-store' }).then(r => r.json()),
+        fetch(isoMapUrl, { cache: 'no-store' }).then(r => r.json())
+      ]);
+
+      const features = topojson.feature(topo, topo.objects.countries).features;
+      const codeMap = isoMap.codes || {};
+
+      centroids = {};
+      features.forEach(feature => {
+        const code = parseInt(feature.id, 10);
+        const entry = codeMap[code];
+        if (!entry || !entry.iso3) return;
+        const centroid = d3.geoCentroid(feature);
+        if (!Number.isFinite(centroid[0]) || !Number.isFinite(centroid[1])) return;
+        centroids[entry.iso3] = {
+          lat: centroid[1],
+          lon: centroid[0],
+          name: entry.name || entry.iso3
+        };
+      });
+
+      L.geoJSON(features, {
+        style: {
+          color: '#2a3a52',
+          weight: 1,
+          fillOpacity: 0.05
+        }
+      }).addTo(map);
+    }
+
+    async function loadTradeData() {
+      const response = await fetch(dataUrl, { cache: 'no-store' });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const payload = await response.json();
+      tradeRows = payload.rows || [];
+
+      const years = payload.meta?.years || [];
+      yearSelect.innerHTML = '';
+      years.forEach(year => {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        yearSelect.appendChild(option);
+      });
+      yearSelect.value = years[years.length - 1];
+      buildYearIndex(tradeRows);
+      dataNote.textContent = `Source: ${payload.meta?.source || 'BACI viz sample'} · ${tradeRows.length.toLocaleString()} flows`;
+    }
+
+    async function init() {
+      try {
+        await loadCentroids();
+        await loadTradeData();
+        updateMap();
+        map.invalidateSize();
+      } catch (err) {
+        console.warn('Trade map failed to load', err);
+        dataNote.textContent = 'Unable to load map data. Ensure JSON files are available.';
+      }
+    }
+
+    yearSelect.addEventListener('change', updateMap);
+    metricSelect.addEventListener('change', updateMap);
+    topNSlider.addEventListener('input', () => {
+      topNLabel.textContent = topNSlider.value;
+      updateMap();
+    });
+    minTradeSlider.addEventListener('input', () => {
+      minTradeLabel.textContent = minTradeSlider.value;
+      updateMap();
+    });
+
+    window.addEventListener('resize', () => map.invalidateSize());
+
+    init();
+  </script>
+</body>
+</html>
