@@ -18,7 +18,7 @@
       font-family: 'Sora', sans-serif;
       background: linear-gradient(135deg, #0a1018 0%, #182433 100%);
       color: #e9eef5;
-      overflow: hidden;
+      overflow: auto;
     }
 
     nav {
@@ -66,7 +66,7 @@
     .container {
       display: grid;
       grid-template-columns: 320px 1fr;
-      height: calc(100vh - 56px);
+      min-height: calc(100vh - 64px);
     }
 
     .sidebar {
@@ -195,6 +195,7 @@
     .main-canvas {
       position: relative;
       overflow: hidden;
+      min-height: 60vh;
     }
 
     canvas {
@@ -355,6 +356,32 @@
       color: #60a5fa;
       margin-left: 8px;
       cursor: help;
+    }
+
+    @media (max-width: 1100px) {
+      .container {
+        grid-template-columns: 1fr;
+        min-height: auto;
+      }
+
+      .sidebar {
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .main-canvas {
+        min-height: 65vh;
+      }
+
+      .stats {
+        position: static;
+        margin: 16px;
+      }
+
+      .legend {
+        position: static;
+        margin: 0 16px 16px;
+      }
     }
   </style>
 </head>
@@ -554,8 +581,11 @@
 
     // Initialize canvas
     function resizeCanvas() {
-      canvas.width = canvas.clientWidth;
-      canvas.height = canvas.clientHeight;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       if (field) drawField();
     }
     window.addEventListener('resize', resizeCanvas);
@@ -632,8 +662,9 @@
     // Draw field as heatmap
     function drawField() {
       if (!field) return;
-      const cellW = canvas.width / gridSize;
-      const cellH = canvas.height / gridSize;
+      const rect = canvas.getBoundingClientRect();
+      const cellW = rect.width / gridSize;
+      const cellH = rect.height / gridSize;
       const display = getDisplayField();
 
       let min = Infinity, max = -Infinity;
