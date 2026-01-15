@@ -607,21 +607,13 @@
 
     async function init() {
       try {
-        await loadTradeData();
-        updateMap();
-      } catch (err) {
-        console.warn('Trade data load failed', err);
-        dataNote.textContent = 'Unable to load trade data. Ensure JSON files are available.';
-        return;
-      }
-
-      try {
-        await loadCentroids();
+        // Load both data sources in parallel
+        await Promise.all([loadTradeData(), loadCentroids()]);
         updateMap();
         map.invalidateSize();
       } catch (err) {
-        console.warn('Centroid load failed', err);
-        dataNote.textContent = 'Map base layer unavailable; showing data table only.';
+        console.warn('Init failed', err);
+        dataNote.textContent = 'Unable to load required data. Check console for details.';
       }
     }
 
