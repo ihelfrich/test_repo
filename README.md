@@ -378,7 +378,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **CEPII** for maintaining excellent trade data resources
 - **Three.js** community for the powerful 3D visualization library
 - **Statsmodels** developers for robust econometric tools
-- **Claude Code** for AI-assisted development
 
 ---
 

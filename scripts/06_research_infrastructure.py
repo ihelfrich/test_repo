@@ -3,7 +3,7 @@
 Research Infrastructure: Usage Tracking & Analytics
 ===================================================
 
-This module provides career-making research infrastructure:
+This module provides research infrastructure:
 
 1. **Usage Analytics:** Track what researchers do with the tool
 2. **Research Documentation:** Auto-generate citations and methodology
@@ -199,8 +199,7 @@ class ResearchSession:
         """
         Generate citation for researchers to include in their papers.
 
-        This is CRITICAL for career impact - every paper citing this
-        platform boosts Dr. Helfrich's academic profile.
+        This supports scholarly attribution for the platform and its outputs.
         """
         if format == 'bibtex':
             year = datetime.now().year

@@ -5,6 +5,8 @@ from pathlib import Path
 import duckdb
 import numpy as np
 import pandas as pd
+import pyarrow as pa
+import pyarrow.ipc as ipc
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 
@@ -36,6 +38,11 @@ def parse_args() -> argparse.Namespace:
         default="docs/data/baci_gravity_viz.json",
         help="Output JSON path for web visualization.",
     )
+    parser.add_argument(
+        "--out-arrow",
+        default="docs/data/baci_gravity_viz.arrow",
+        help="Output Arrow IPC path for browser-native loading.",
+    )
     return parser.parse_args()
 
 
@@ -43,8 +50,10 @@ def main() -> None:
     args = parse_args()
     out_parquet = Path(args.out_parquet)
     out_json = Path(args.out_json)
+    out_arrow = Path(args.out_arrow)
     out_parquet.parent.mkdir(parents=True, exist_ok=True)
     out_json.parent.mkdir(parents=True, exist_ok=True)
+    out_arrow.parent.mkdir(parents=True, exist_ok=True)
 
     con = duckdb.connect()
     query = f"""
@@ -159,6 +168,9 @@ def main() -> None:
     df_out = df[keep_cols].copy()
 
     df_out.to_parquet(out_parquet, index=False)
+    table = pa.Table.from_pandas(df_out)
+    with ipc.new_file(out_arrow, table.schema) as writer:
+        writer.write(table)
 
     coef_terms = [
         "ln_dist",
@@ -188,6 +200,7 @@ def main() -> None:
         json.dump(payload, f)
 
     print(f"Wrote parquet to {out_parquet}")
+    print(f"Wrote Arrow IPC to {out_arrow}")
     print(f"Wrote JSON to {out_json}")
     print(f"Rows: {len(df_out)}")
 

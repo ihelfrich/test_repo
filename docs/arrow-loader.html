@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arrow Parquet Loader - Proof of Concept</title>
+    <title>Arrow IPC Loader - Proof of Concept</title>
     <style>
         body {
             margin: 0;
@@ -111,18 +111,18 @@
 </head>
 <body>
     <div class="container">
-        <h1>🚀 Apache Arrow + Parquet</h1>
-        <p class="subtitle">Zero-copy loading of million-row datasets in the browser</p>
+        <h1>🚀 Apache Arrow IPC</h1>
+        <p class="subtitle">Zero-copy loading of columnar datasets in the browser</p>
 
         <div class="demo-box">
             <h2 style="margin-top: 0;">Load Gravity Data</h2>
             <p style="color: #718096; margin-bottom: 20px;">
-                This demonstrates loading a Parquet file directly in the browser using Apache Arrow.
-                Traditional JSON would be 5-10x larger and much slower to parse.
+                This demonstrates loading an Arrow IPC file directly in the browser using Apache Arrow.
+                Traditional JSON would be larger and slower to parse for large datasets.
             </p>
 
             <button id="loadBtn" onclick="loadParquetDemo()">
-                Load baci_gravity_viz.parquet
+                Load baci_gravity_viz.arrow
             </button>
 
             <div class="progress-bar" id="progressBar" style="display: none;">
@@ -211,14 +211,14 @@
             progressFill.style.width = '0%';
 
             try {
-                log('Starting Parquet load...', 'info');
+                log('Starting Arrow IPC load...', 'info');
                 const startTime = performance.now();
 
-                // Fetch Parquet file
-                log('Fetching data/baci_gravity_viz.parquet...', 'info');
+                // Fetch Arrow IPC file
+                log('Fetching data/baci_gravity_viz.arrow...', 'info');
                 progressFill.style.width = '20%';
 
-                const response = await fetch('data/baci_gravity_viz.parquet');
+                const response = await fetch('data/baci_gravity_viz.arrow');
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
@@ -229,7 +229,7 @@
                 progressFill.style.width = '50%';
 
                 // Parse with Apache Arrow
-                log('Parsing Parquet file with Apache Arrow...', 'info');
+                log('Parsing Arrow IPC file with Apache Arrow...', 'info');
                 const table = arrow.tableFromIPC(arrayBuffer);
                 progressFill.style.width = '80%';
 
@@ -279,7 +279,7 @@
                     log(`Filtered to 2020: ${year2020.numRows.toLocaleString()} rows in ${filterTime.toFixed(1)}ms`, 'success');
                 }
 
-                log('✓ Arrow Parquet demo complete!', 'success');
+                log('✓ Arrow IPC demo complete!', 'success');
                 log('This approach enables million-row datasets in the browser with no backend.', 'info');
 
             } catch (error) {
@@ -298,7 +298,7 @@
         }
 
         log('Ready to load. Click "Load" button above.', 'info');
-        log('Note: Requires data/baci_gravity_viz.parquet to exist', 'info');
+        log('Note: Requires data/baci_gravity_viz.arrow to exist', 'info');
     </script>
 </body>
 </html>

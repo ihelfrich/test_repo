@@ -54,6 +54,33 @@
       line-height: 1.6;
     }
 
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 14px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.4px;
+      background: rgba(47, 156, 149, 0.12);
+      color: #1d6f69;
+    }
+
+    .status::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .status.is-warning {
+      background: rgba(244, 179, 74, 0.15);
+      color: #a56a1a;
+    }
+
     .layout {
       display: grid;
       grid-template-columns: minmax(260px, 340px) 1fr;
@@ -309,6 +336,7 @@
       multilateral resistance captured via exporter/importer fixed effects. Use the sliders to
       scale estimated trade‑cost elasticities and compare predicted trade against baseline.
     </p>
+    <div class="status" id="status">Initializing data pipeline…</div>
   </header>
 
   <section class="layout">
@@ -394,25 +422,18 @@
   <footer>
     Data: BACI bilateral totals + CEPII gravity v202211. Columnar source in
     <code>docs/data/baci_gravity_viz.parquet</code> with a JSON render payload for GitHub Pages.
+    <div>Curated by Dr. Ian Helfrich.</div>
   </footer>
 
-  <script type="importmap">
-    {
-      "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
-        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
-      }
-    }
-  </script>
-
   <script type="module">
-    import * as THREE from "three";
-    import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+    import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js";
+    import { OrbitControls } from "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/controls/OrbitControls.js";
 
     const dataUrl = new URL("data/baci_gravity_viz.json", window.location.href).href;
     const container = document.getElementById("viz");
     const tooltip = document.getElementById("tooltip");
     const meta = document.getElementById("meta");
+    const statusEl = document.getElementById("status");
     const winnersList = document.getElementById("winners");
     const losersList = document.getElementById("losers");
 
@@ -433,6 +454,87 @@
     const colLabel = document.getElementById("colLabel");
     const rtaLabel = document.getElementById("rtaLabel");
 
+    const fallbackPayload = {
+      meta: {
+        source: "Fallback dataset (offline mode)",
+        years: [2021],
+        top_n: 3,
+        model: "Anderson-van Wincoop (2003) gravity with exporter/importer FE (PPML)",
+        notes: "Fallback only: live payload not available.",
+        warning: "Live data unavailable; showing fallback sample.",
+        coefficients: {
+          ln_dist: -0.8,
+          contig: 0.4,
+          comlang_off: 0.3,
+          comcol: 0.2,
+          rta_coverage: 0.15,
+          ln_gdp_o: 0.9,
+          ln_gdp_d: 0.9,
+          ln_pop_o: 0.1,
+          ln_pop_d: 0.1,
+        },
+      },
+      rows: [
+        {
+          year: 2021,
+          iso_o: "USA",
+          iso_d: "CHN",
+          trade_value_usd_millions: 50000,
+          trade_pred: 42000,
+          base_eta: Math.log(42000),
+          log_trade: Math.log(1 + 50000),
+          log_trade_pred: Math.log(1 + 42000),
+          log_trade_gap: Math.log(1 + 50000) - Math.log(1 + 42000),
+          ln_dist: 8.6,
+          ln_gdp_o: 30.8,
+          ln_gdp_d: 30.5,
+          ln_gdp_prod: 61.3,
+          contig: 0,
+          comlang_off: 0,
+          comcol: 0,
+          rta_coverage: 0,
+        },
+        {
+          year: 2021,
+          iso_o: "DEU",
+          iso_d: "FRA",
+          trade_value_usd_millions: 32000,
+          trade_pred: 35000,
+          base_eta: Math.log(35000),
+          log_trade: Math.log(1 + 32000),
+          log_trade_pred: Math.log(1 + 35000),
+          log_trade_gap: Math.log(1 + 32000) - Math.log(1 + 35000),
+          ln_dist: 6.1,
+          ln_gdp_o: 29.5,
+          ln_gdp_d: 29.2,
+          ln_gdp_prod: 58.7,
+          contig: 1,
+          comlang_off: 0,
+          comcol: 0,
+          rta_coverage: 1,
+        },
+        {
+          year: 2021,
+          iso_o: "BRA",
+          iso_d: "ARG",
+          trade_value_usd_millions: 8500,
+          trade_pred: 9100,
+          base_eta: Math.log(9100),
+          log_trade: Math.log(1 + 8500),
+          log_trade_pred: Math.log(1 + 9100),
+          log_trade_gap: Math.log(1 + 8500) - Math.log(1 + 9100),
+          ln_dist: 6.5,
+          ln_gdp_o: 28.7,
+          ln_gdp_d: 27.9,
+          ln_gdp_prod: 56.6,
+          contig: 1,
+          comlang_off: 0,
+          comcol: 0,
+          rta_coverage: 1,
+        },
+      ],
+    };
+
     const scene = new THREE.Scene();
     scene.fog = new THREE.Fog(0xf4f1ea, 110, 220);
 
@@ -440,7 +542,7 @@
     camera.position.set(80, 55, 120);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(container.clientWidth, container.clientHeight);
     container.appendChild(renderer.domElement);
 
@@ -588,7 +690,11 @@
     };
 
     const updateMeta = (metaInfo, rows, totals, metricField) => {
+      const warning = metaInfo.warning
+        ? `<div style="color:#a56a1a;"><strong>Notice:</strong> ${metaInfo.warning}</div>`
+        : "";
       meta.innerHTML = `
+        ${warning}
         <div><strong>Dataset:</strong> ${metaInfo.source}</div>
         <div><strong>Years:</strong> ${metaInfo.years.join(", ")}</div>
         <div><strong>Top N:</strong> ${metaInfo.top_n}</div>
@@ -616,8 +722,19 @@
       try {
         console.log('[INIT] Starting initialization...');
         meta.textContent = `Loading data from ${dataUrl} ...`;
+        statusEl.textContent = "Loading data…";
+        statusEl.classList.remove("is-warning");
         console.log('[INIT] Fetching data from:', dataUrl);
-        const payload = await fetchData();
+        let payload;
+        try {
+          payload = await fetchData();
+          statusEl.textContent = "Live data loaded";
+        } catch (err) {
+          console.warn('[INIT] Live data load failed, using fallback.', err);
+          payload = fallbackPayload;
+          statusEl.textContent = "Fallback sample loaded";
+          statusEl.classList.add("is-warning");
+        }
         console.log('[INIT] Data fetched successfully:', payload.rows.length, 'rows');
         const rows = payload.rows;
         const metaInfo = payload.meta;
@@ -744,6 +861,8 @@
         });
       } catch (err) {
         console.error('[INIT] ERROR:', err);
+        statusEl.textContent = "Initialization error";
+        statusEl.classList.add("is-warning");
         meta.innerHTML = `
           <div><strong>Data load failed:</strong> ${err.message}</div>
           <div style="margin-top:10px;"><strong>Stack:</strong> <pre style="font-size:10px;overflow-x:auto;">${err.stack}</pre></div>

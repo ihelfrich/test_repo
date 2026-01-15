@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Novel Methodological Contributions - Career-Making Research
+Novel Methodological Contributions
 ===========================================================
 
 This module implements genuinely novel methodologies that advance the
@@ -364,10 +364,7 @@ def export_methodology_paper_draft():
     """
     Auto-generate draft methodology paper.
 
-    This is CRITICAL for career impact:
-    - Establishes Dr. Helfrich as methodological innovator
-    - Publishable in top journals
-    - Will be cited by all users of the platform
+    This supports broader dissemination of methodological contributions.
     """
     paper = """
     \\documentclass[12pt]{article}
@@ -549,7 +546,7 @@ def export_methodology_paper_draft():
 if __name__ == "__main__":
     print("="*70)
     print("NOVEL METHODOLOGICAL CONTRIBUTIONS")
-    print("Dr. Ian Helfrich - Career-Making Research")
+    print("Dr. Ian Helfrich - Methodological Contributions")
     print("="*70)
 
     # Generate methodology paper draft

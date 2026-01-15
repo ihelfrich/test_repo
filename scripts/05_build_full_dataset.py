@@ -26,7 +26,10 @@ import sys
 
 import numpy as np
 import pandas as pd
-import yaml
+try:
+    import yaml
+except ImportError:  # Optional for simple runs
+    yaml = None
 
 # Configure logging
 logging.basicConfig(
@@ -39,6 +42,8 @@ logger = logging.getLogger(__name__)
 def load_config():
     """Load project configuration."""
     config_path = Path(__file__).parent.parent / "config" / "project_config.yml"
+    if yaml is None:
+        return {"data_directory": "/Users/ian/trade_data_warehouse"}
     with open(config_path) as f:
         return yaml.safe_load(f)
 
