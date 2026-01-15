@@ -467,7 +467,7 @@
         const val = row[metricKey] ?? 0;
         return metricKey === 'log_trade_gap' ? Math.abs(val) : val;
       });
-      const maxVal = Math.max(...metricValues, 1);
+      const maxVal = metricValues.length ? Math.max(...metricValues) : 1;
 
       const sorted = filtered.slice().sort((a, b) => {
         const va = metricKey === 'log_trade_gap' ? Math.abs(a[metricKey]) : a[metricKey];
@@ -486,7 +486,7 @@
         totals[row.iso_d] = (totals[row.iso_d] || 0) + row.trade_value_usd_millions;
       });
 
-      const maxTotal = Math.max(...Object.values(totals), 1);
+      const maxTotal = Object.values(totals).length ? Math.max(...Object.values(totals)) : 1;
 
       flows.forEach(row => {
         const origin = centroids[row.iso_o];
@@ -536,7 +536,11 @@
       totalTrade.textContent = formatNumber(totalTradeVal, 0);
       flowCount.textContent = flows.length;
       countryCount.textContent = Object.keys(totals).length;
-      metricRange.textContent = `${formatNumber(Math.min(...metricValues), 2)} → ${formatNumber(maxVal, 2)}`;
+      if (metricValues.length) {
+        metricRange.textContent = `${formatNumber(Math.min(...metricValues), 2)} → ${formatNumber(maxVal, 2)}`;
+      } else {
+        metricRange.textContent = '-';
+      }
     }
 
     async function loadCentroids() {
@@ -603,13 +607,21 @@
 
     async function init() {
       try {
-        await loadCentroids();
         await loadTradeData();
+        updateMap();
+      } catch (err) {
+        console.warn('Trade data load failed', err);
+        dataNote.textContent = 'Unable to load trade data. Ensure JSON files are available.';
+        return;
+      }
+
+      try {
+        await loadCentroids();
         updateMap();
         map.invalidateSize();
       } catch (err) {
-        console.warn('Trade map failed to load', err);
-        dataNote.textContent = 'Unable to load map data. Ensure JSON files are available.';
+        console.warn('Centroid load failed', err);
+        dataNote.textContent = 'Map base layer unavailable; showing data table only.';
       }
     }
 

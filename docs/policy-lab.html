@@ -495,7 +495,8 @@
           for (let j = 0; j < n; j++) {
             sum += exportShares[i][j] * phi[i][j] * Math.pow(Pi[j], theta - 1);
           }
-          P_new[i] = Math.pow(sum, 1 / (1 - theta));
+          const safeSum = Math.max(sum, 1e-12);
+          P_new[i] = Math.pow(safeSum, 1 / (1 - theta));
         }
 
         for (let j = 0; j < n; j++) {
@@ -503,7 +504,8 @@
           for (let i = 0; i < n; i++) {
             sum += importShares[i][j] * phi[i][j] * Math.pow(P_new[i], theta - 1);
           }
-          Pi_new[j] = Math.pow(sum, 1 / (1 - theta));
+          const safeSum = Math.max(sum, 1e-12);
+          Pi_new[j] = Math.pow(safeSum, 1 / (1 - theta));
         }
 
         let diff = 0;
@@ -531,7 +533,7 @@
         }
       }
 
-      const welfare = P.map(value => Math.pow(value, -1 / (theta - 1)));
+      const welfare = P.map(value => Math.pow(Math.max(value, 1e-12), -1 / (theta - 1)));
 
       return {
         exports,
@@ -556,8 +558,8 @@
         iso,
         name: names[iso] || iso,
         welfare: welfareChanges[idx],
-        exportDelta: (results.exports_cf[idx] / results.exports[idx] - 1) * 100,
-        importDelta: (results.imports_cf[idx] / results.imports[idx] - 1) * 100
+        exportDelta: (results.exports_cf[idx] / Math.max(results.exports[idx], 1e-9) - 1) * 100,
+        importDelta: (results.imports_cf[idx] / Math.max(results.imports[idx], 1e-9) - 1) * 100
       }));
 
       entries.sort((a, b) => b.welfare - a.welfare);
@@ -581,11 +583,13 @@
         welfareTable.appendChild(row);
       });
 
-      summaryText.textContent = `Theta ${theta.toFixed(1)} with ${entries.length} countries. Results are relative to baseline predicted trade.`;
+      summaryText.textContent = `Theta ${theta.toFixed(1)} with ${entries.length} countries in ${yearSelect.value}. Results are relative to baseline predicted trade.`;
     }
 
     function runSimulation() {
       if (!payload) return;
+      statusPill.textContent = 'Running';
+      runBtn.disabled = true;
       const yearKey = yearSelect.value;
       const theta = parseFloat(thetaSlider.value);
       const rate = parseFloat(tariffSlider.value) / 100;
@@ -605,9 +609,17 @@
         shock.partner = null;
       }
 
-      const results = solveCounterfactual(yearKey, shock, theta);
-      renderResults(results, theta);
-      statusPill.textContent = 'Updated';
+      try {
+        const results = solveCounterfactual(yearKey, shock, theta);
+        renderResults(results, theta);
+        statusPill.textContent = 'Updated';
+      } catch (err) {
+        console.warn('Simulation failed', err);
+        statusPill.textContent = 'Error';
+        summaryText.textContent = 'Counterfactual failed. Try a different year or shock.';
+      } finally {
+        runBtn.disabled = false;
+      }
     }
 
     function populateSelectors() {
