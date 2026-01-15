@@ -162,6 +162,34 @@
       cursor: pointer;
     }
 
+    .case-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .case-btn {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(233, 238, 245, 0.15);
+      background: rgba(47, 156, 149, 0.08);
+      color: var(--ink);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      cursor: pointer;
+    }
+
+    .case-btn:hover {
+      border-color: rgba(47, 156, 149, 0.5);
+    }
+
+    .case-btn.active {
+      background: linear-gradient(135deg, rgba(47, 156, 149, 0.35), rgba(244, 179, 74, 0.35));
+      border-color: rgba(244, 179, 74, 0.6);
+      color: #0f1825;
+    }
+
     .value {
       font-family: "IBM Plex Mono", monospace;
       font-size: 12px;
@@ -333,8 +361,8 @@
         <select id="partnerSelect"></select>
 
         <label>Tariff / cost change <span id="tariffLabel">10%</span></label>
-        <input type="range" id="tariff" min="0" max="30" step="1" value="10" />
-        <div class="value">Positive = higher trade costs. For RTA, this is a reduction.</div>
+        <input type="range" id="tariff" min="0" max="100" step="1" value="10" />
+        <div class="value">Range: 0–100%. Positive = higher trade costs. For RTA, this is a reduction.</div>
 
         <label>Trade elasticity θ <span id="thetaLabel">5.0</span></label>
         <input type="range" id="theta" min="2" max="10" step="0.5" value="5" />
@@ -342,6 +370,17 @@
 
         <button id="runBtn">Run Counterfactual</button>
         <div class="note" id="dataNote">Loading policy lab data…</div>
+      </div>
+
+      <div class="panel">
+        <h2>Case Studies</h2>
+        <div class="case-list">
+          <button class="case-btn" data-case="trump_global">Trump proposal: 10% universal tariff</button>
+          <button class="case-btn" data-case="trump_china">Trump proposal: 60% China tariff (imports into USA)</button>
+          <button class="case-btn" data-case="trump_combo">Trump proposal: 10% universal + 60% China</button>
+          <button class="case-btn" data-case="custom">Clear preset (custom)</button>
+        </div>
+        <div class="note" id="caseNote">Presets are illustrative; adjust parameters as needed.</div>
       </div>
 
       <div class="panel">
@@ -411,6 +450,7 @@
     const thetaLabel = document.getElementById('thetaLabel');
     const runBtn = document.getElementById('runBtn');
     const dataNote = document.getElementById('dataNote');
+    const caseNote = document.getElementById('caseNote');
     const statusPill = document.getElementById('statusPill');
     const summaryText = document.getElementById('summaryText');
     const targetImportChange = document.getElementById('targetImportChange');
@@ -421,6 +461,13 @@
 
     let payload = null;
     let countryIndex = {};
+    let scenarioOverride = null;
+
+    function setScenarioButtons(activeKey) {
+      document.querySelectorAll('.case-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.case === activeKey);
+      });
+    }
 
     function formatPct(value) {
       if (!Number.isFinite(value)) return '-';
@@ -471,6 +518,49 @@
       return delta;
     }
 
+    function applyShock(delta, shock) {
+      const tau = shock.rate;
+      const n = delta.length;
+
+      if (shock.type === 'global_tariff') {
+        for (let i = 0; i < n; i++) {
+          for (let j = 0; j < n; j++) {
+            if (i !== j) delta[i][j] *= (1 + tau);
+          }
+        }
+        return;
+      }
+
+      if (shock.type === 'import_tariff') {
+        for (let i = 0; i < n; i++) {
+          if (i === shock.target) continue;
+          delta[i][shock.target] *= (1 + tau);
+        }
+        return;
+      }
+
+      if (shock.type === 'bilateral_tariff') {
+        if (shock.partner !== null) {
+          delta[shock.partner][shock.target] *= (1 + tau);
+        }
+        return;
+      }
+
+      if (shock.type === 'rta') {
+        const reduction = Math.max(0, Math.min(0.5, tau));
+        if (shock.partner !== null) {
+          delta[shock.partner][shock.target] *= (1 - reduction);
+          delta[shock.target][shock.partner] *= (1 - reduction);
+        }
+      }
+    }
+
+    function buildCompositeDelta(n, shocks) {
+      const delta = Array.from({ length: n }, () => Array(n).fill(1));
+      shocks.forEach(shock => applyShock(delta, shock));
+      return delta;
+    }
+
     function solveCounterfactual(yearKey, shock, theta) {
       const yearData = payload.by_year[yearKey];
       const flows = yearData.flows_pred;
@@ -479,7 +569,9 @@
       const imports = yearData.imports_pred;
       const n = exports.length;
 
-      const delta = buildDeltaMatrix(n, shock);
+      const delta = Array.isArray(shock)
+        ? buildCompositeDelta(n, shock)
+        : buildDeltaMatrix(n, shock);
       const phi = delta.map(row => row.map(value => Math.pow(value, -theta)));
 
       const flows_cf = Array.from({ length: n }, () => Array(n).fill(0));
@@ -579,6 +671,11 @@
 
     function runSimulation() {
       if (!payload) return;
+      if (!Object.keys(countryIndex).length) {
+        (payload.meta.countries || []).forEach((iso, idx) => {
+          countryIndex[iso] = idx;
+        });
+      }
       statusPill.textContent = 'Running';
       runBtn.disabled = true;
       const yearKey = yearSelect.value;
@@ -592,6 +689,7 @@
       const rate = parseFloat(tariffSlider.value) / 100;
       const targetIso = targetSelect.value;
       const partnerIso = partnerSelect.value;
+
       const shock = {
         type: shockType.value,
         target: countryIndex[targetIso],
@@ -608,7 +706,7 @@
         shock.partner = null;
       }
 
-      if (shock.type === 'bilateral_tariff' || shock.type === 'rta') {
+      if (!scenarioOverride && (shock.type === 'bilateral_tariff' || shock.type === 'rta')) {
         if (shock.target === undefined || shock.partner === undefined) {
           statusPill.textContent = 'Error';
           summaryText.textContent = 'Select valid target and partner countries.';
@@ -617,7 +715,7 @@
         }
       }
 
-      if (rate === 0) {
+      if (!scenarioOverride && rate === 0) {
         const base = {
           welfare: Array(payload.meta.countries.length).fill(1),
           exports: payload.by_year[yearKey].exports_pred,
@@ -637,7 +735,9 @@
         const baseline = {
           welfare: Array(payload.meta.countries.length).fill(1)
         };
-        const results = solveCounterfactual(yearKey, shock, theta);
+        const results = scenarioOverride
+          ? solveCounterfactual(yearKey, scenarioOverride.shocks, theta)
+          : solveCounterfactual(yearKey, shock, theta);
         renderResults(results, theta, baseline);
         statusPill.textContent = 'Updated';
       } catch (err) {
@@ -680,6 +780,72 @@
       partnerSelect.value = countries[1] || countries[0];
     }
 
+    function applyCase(caseKey) {
+      scenarioOverride = null;
+      setScenarioButtons(caseKey);
+
+      if (caseKey === 'custom') {
+        caseNote.textContent = 'Custom mode. Adjust parameters manually.';
+        scenarioOverride = null;
+        runSimulation();
+        return;
+      }
+
+      if (caseKey === 'trump_global') {
+        shockType.value = 'global_tariff';
+        tariffSlider.value = 10;
+        tariffLabel.textContent = '10%';
+        scenarioOverride = {
+          name: 'Trump proposal: 10% universal tariff',
+          shocks: [{ type: 'global_tariff', rate: 0.10 }]
+        };
+        caseNote.textContent = 'Illustrative 10% universal tariff scenario.';
+      }
+
+      if (caseKey === 'trump_china') {
+        shockType.value = 'bilateral_tariff';
+        tariffSlider.value = 60;
+        tariffLabel.textContent = '60%';
+        scenarioOverride = {
+          name: 'Trump proposal: 60% China tariff',
+          shocks: [{ type: 'bilateral_tariff', targetIso: 'USA', partnerIso: 'CHN', rate: 0.60 }]
+        };
+        caseNote.textContent = 'Illustrative 60% tariff on China → USA imports.';
+      }
+
+      if (caseKey === 'trump_combo') {
+        shockType.value = 'global_tariff';
+        tariffSlider.value = 10;
+        tariffLabel.textContent = '10%';
+        scenarioOverride = {
+          name: 'Trump proposal: 10% universal + 60% China',
+          shocks: [
+            { type: 'global_tariff', rate: 0.10 },
+            { type: 'bilateral_tariff', targetIso: 'USA', partnerIso: 'CHN', rate: 0.60 }
+          ]
+        };
+        caseNote.textContent = 'Composite scenario: universal 10% plus China 60% tariff into USA.';
+      }
+
+      if (scenarioOverride && scenarioOverride.shocks) {
+        scenarioOverride.shocks.forEach(shock => {
+          if (shock.targetIso) {
+            shock.target = countryIndex[shock.targetIso];
+          }
+          if (shock.partnerIso) {
+            shock.partner = countryIndex[shock.partnerIso];
+          }
+          if ((shock.type === 'bilateral_tariff' || shock.type === 'rta') &&
+              (shock.target === undefined || shock.partner === undefined)) {
+            statusPill.textContent = 'Error';
+            summaryText.textContent = 'Preset uses countries not in the current sample.';
+          }
+        });
+      }
+
+      runSimulation();
+    }
+
     async function init() {
       try {
         const response = await fetch(dataUrl, { cache: 'no-store' });
@@ -700,20 +866,41 @@
 
     yearSelect.addEventListener('change', () => {
       yearLabel.textContent = yearSelect.value;
+      scenarioOverride = null;
+      setScenarioButtons('custom');
       runSimulation();
     });
-    shockType.addEventListener('change', runSimulation);
-    targetSelect.addEventListener('change', runSimulation);
-    partnerSelect.addEventListener('change', runSimulation);
+    shockType.addEventListener('change', () => {
+      scenarioOverride = null;
+      setScenarioButtons('custom');
+      runSimulation();
+    });
+    targetSelect.addEventListener('change', () => {
+      scenarioOverride = null;
+      setScenarioButtons('custom');
+      runSimulation();
+    });
+    partnerSelect.addEventListener('change', () => {
+      scenarioOverride = null;
+      setScenarioButtons('custom');
+      runSimulation();
+    });
     tariffSlider.addEventListener('input', () => {
       tariffLabel.textContent = `${tariffSlider.value}%`;
+      scenarioOverride = null;
+      setScenarioButtons('custom');
       runSimulation();
     });
     thetaSlider.addEventListener('input', () => {
       thetaLabel.textContent = thetaSlider.value;
+      scenarioOverride = null;
+      setScenarioButtons('custom');
       runSimulation();
     });
     runBtn.addEventListener('click', runSimulation);
+    document.querySelectorAll('.case-btn').forEach(btn => {
+      btn.addEventListener('click', () => applyCase(btn.dataset.case));
+    });
 
     init();
   </script>
