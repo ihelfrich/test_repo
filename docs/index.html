@@ -160,8 +160,8 @@
       height: 68vh;
       min-height: 420px;
       border-radius: 16px;
-      border: 1px solid rgba(19, 34, 56, 0.08);
-      background: linear-gradient(140deg, rgba(255, 255, 255, 0.8), rgba(244, 241, 234, 0.6));
+      border: 1px solid rgba(15, 22, 34, 0.4);
+      background: radial-gradient(circle at 20% 20%, #1c2a3b, #0e141c 60%, #0a0f15 100%);
       overflow: hidden;
     }
 
@@ -205,7 +205,20 @@
       flex: 1;
       height: 6px;
       border-radius: 999px;
-      background: linear-gradient(90deg, #2f9c95, #f4b34a, #d1495b);
+      background: linear-gradient(90deg, #4f9dd8, #f4b34a, #d1495b);
+    }
+
+    .axis-legend {
+      display: grid;
+      gap: 6px;
+      margin-top: 14px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .axis-legend span {
+      color: var(--ink);
+      font-weight: 600;
     }
 
     .leaderboard {
@@ -360,7 +373,27 @@
           <option value="cf">Predicted Counterfactual (log1p)</option>
           <option value="delta">Counterfactual Δ (level)</option>
           <option value="residual">Baseline Residual (level)</option>
+          <option value="pct">Counterfactual % (Δ / baseline)</option>
         </select>
+      </div>
+
+      <div class="control-group">
+        <label for="colorSelect">Color By <span id="colorValue"></span></label>
+        <select id="colorSelect">
+          <option value="delta_pred">Counterfactual Δ</option>
+          <option value="residual">Baseline Residual</option>
+          <option value="pct_change">Counterfactual %</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="topN">Top Flows <span id="topNLabel"></span></label>
+        <input id="topN" type="range" min="50" max="400" step="10" value="200" />
+      </div>
+
+      <div class="control-group">
+        <label for="sizeScale">Point Size <span id="sizeLabel"></span></label>
+        <input id="sizeScale" type="range" min="0.6" max="2.0" step="0.1" value="1.2" />
       </div>
 
       <div class="control-group">
@@ -389,14 +422,20 @@
       </div>
 
       <div class="legend">
-        <span>Loss</span>
+        <span id="legendMin">Low</span>
         <div class="legend-bar"></div>
-        <span>Gain</span>
+        <span id="legendMax">High</span>
       </div>
 
       <p class="note">
         Partial‑equilibrium counterfactual: fixed effects are held constant (no GE re‑balancing).
       </p>
+
+      <div class="axis-legend">
+        <div><span>X</span> Log distance (ln dist)</div>
+        <div><span>Y</span> Log GDP product (ln gdp_o + ln gdp_d)</div>
+        <div><span>Z</span> Selected metric</div>
+      </div>
     </div>
 
     <div class="panel">
@@ -445,11 +484,19 @@
     const statusEl = document.getElementById("status");
     const winnersList = document.getElementById("winners");
     const losersList = document.getElementById("losers");
+    const legendMin = document.getElementById("legendMin");
+    const legendMax = document.getElementById("legendMax");
 
     const yearSelect = document.getElementById("yearSelect");
     const yearValue = document.getElementById("yearValue");
     const metricSelect = document.getElementById("metricSelect");
     const metricValue = document.getElementById("metricValue");
+    const colorSelect = document.getElementById("colorSelect");
+    const colorValue = document.getElementById("colorValue");
+    const topNSlider = document.getElementById("topN");
+    const topNLabel = document.getElementById("topNLabel");
+    const sizeSlider = document.getElementById("sizeScale");
+    const sizeLabel = document.getElementById("sizeLabel");
 
     const distSlider = document.getElementById("distSlider");
     const contigSlider = document.getElementById("contigSlider");
@@ -561,19 +608,19 @@
 
     const axes = new THREE.AxesHelper(60);
     axes.material.transparent = true;
-    axes.material.opacity = 0.5;
+    axes.material.opacity = 0.8;
     scene.add(axes);
 
-    const grid = new THREE.GridHelper(120, 8, 0x9aa6b2, 0xcad2dc);
+    const grid = new THREE.GridHelper(120, 10, 0x3d4a5e, 0x222d3d);
     grid.position.y = -40;
     grid.material.transparent = true;
-    grid.material.opacity = 0.5;
+    grid.material.opacity = 0.7;
     scene.add(grid);
 
-    let points = null;
+    let pointsGroup = null;
     let pointMeta = [];
     const raycaster = new THREE.Raycaster();
-    raycaster.params.Points.threshold = 1.4;
+    raycaster.params.Points.threshold = 2.2;
     const pointer = new THREE.Vector2();
 
     const state = {
@@ -585,7 +632,10 @@
         rta: 1,
       },
       metric: "actual",
+      colorMetric: "delta_pred",
       year: null,
+      topN: 200,
+      sizeScale: 1.2,
     };
 
     const formatMultiplier = (value) => `${Number(value).toFixed(2)}×`;
@@ -598,6 +648,20 @@
       rtaLabel.textContent = formatMultiplier(state.shocks.rta);
       yearValue.textContent = state.year ? state.year : "";
       metricValue.textContent = metricSelect.options[metricSelect.selectedIndex].text;
+      colorValue.textContent = colorSelect.options[colorSelect.selectedIndex].text;
+      topNLabel.textContent = `${state.topN}`;
+      sizeLabel.textContent = `${state.sizeScale.toFixed(1)}×`;
+
+      if (state.colorMetric === "pct_change") {
+        legendMin.textContent = "Lower %";
+        legendMax.textContent = "Higher %";
+      } else if (state.colorMetric === "residual") {
+        legendMin.textContent = "Under";
+        legendMax.textContent = "Over";
+      } else {
+        legendMin.textContent = "Loss";
+        legendMax.textContent = "Gain";
+      }
     };
 
     const normalize = (value, min, max, span) => {
@@ -605,12 +669,12 @@
       return ((value - min) / (max - min) - 0.5) * span;
     };
 
-    const colorFromDelta = (value, min, max) => {
+    const colorFromValue = (value, min, max) => {
       if (max === min) return new THREE.Color(0xf4b34a);
       const t = (value - min) / (max - min);
-      const hue = (1 - t) * 0.48;
+      const hue = (1 - t) * 0.62;
       const color = new THREE.Color();
-      color.setHSL(hue, 0.6, 0.52);
+      color.setHSL(hue, 0.7, 0.55);
       return color;
     };
 
@@ -621,48 +685,73 @@
 
     const log1p = (value) => Math.log(1 + Math.max(0, value));
 
-    const buildPoints = (rows, ranges, metricField) => {
-      const positions = new Float32Array(rows.length * 3);
-      const colors = new Float32Array(rows.length * 3);
-      pointMeta = [];
+    const clearPoints = () => {
+      if (!pointsGroup) return;
+      pointsGroup.children.forEach((child) => {
+        child.geometry.dispose();
+        child.material.dispose();
+      });
+      scene.remove(pointsGroup);
+      pointsGroup = null;
+    };
 
-      rows.forEach((row, i) => {
+    const buildPoints = (rows, ranges, metricField, colorField, sizeScale) => {
+      clearPoints();
+      pointMeta = rows;
+
+      const values = rows.map((row) => row.trade_value_usd_millions);
+      const sorted = [...values].sort((a, b) => a - b);
+      const q1 = sorted[Math.floor(sorted.length * 0.33)] || 0;
+      const q2 = sorted[Math.floor(sorted.length * 0.66)] || q1;
+
+      const buckets = [
+        { max: q1, size: 1.4 },
+        { max: q2, size: 2.2 },
+        { max: Infinity, size: 3.0 },
+      ];
+
+      const bucketData = buckets.map(() => ({ positions: [], colors: [], rowIndex: [] }));
+
+      rows.forEach((row, idx) => {
         const x = normalize(row.ln_dist, ranges.ln_dist.min, ranges.ln_dist.max, 120);
         const y = normalize(row.ln_gdp_prod, ranges.ln_gdp_prod.min, ranges.ln_gdp_prod.max, 120);
         const z = normalize(row[metricField], ranges[metricField].min, ranges[metricField].max, 120);
 
-        positions[i * 3] = x;
-        positions[i * 3 + 1] = y;
-        positions[i * 3 + 2] = z;
+        const color = colorFromValue(row[colorField], ranges[colorField].min, ranges[colorField].max);
+        const bucketIndex = row.trade_value_usd_millions <= q1 ? 0 : row.trade_value_usd_millions <= q2 ? 1 : 2;
 
-        const color = colorFromDelta(row.delta_pred, ranges.delta_pred.min, ranges.delta_pred.max);
-        colors[i * 3] = color.r;
-        colors[i * 3 + 1] = color.g;
-        colors[i * 3 + 2] = color.b;
-
-        pointMeta.push(row);
+        bucketData[bucketIndex].positions.push(x, y, z);
+        bucketData[bucketIndex].colors.push(color.r, color.g, color.b);
+        bucketData[bucketIndex].rowIndex.push(idx);
       });
 
-      const geometry = new THREE.BufferGeometry();
-      geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-      geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+      pointsGroup = new THREE.Group();
 
-      const material = new THREE.PointsMaterial({
-        size: 1.8,
-        vertexColors: true,
-        transparent: true,
-        opacity: 0.85,
+      bucketData.forEach((bucket, idx) => {
+        if (!bucket.positions.length) return;
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(bucket.positions), 3));
+        geometry.setAttribute("color", new THREE.BufferAttribute(new Float32Array(bucket.colors), 3));
+        geometry.setAttribute("rowIndex", new THREE.BufferAttribute(new Float32Array(bucket.rowIndex), 1));
+
+        const material = new THREE.PointsMaterial({
+          size: buckets[idx].size * sizeScale,
+          sizeAttenuation: true,
+          vertexColors: true,
+          transparent: true,
+          opacity: 0.9,
+          blending: THREE.AdditiveBlending,
+        });
+
+        const cloud = new THREE.Points(geometry, material);
+        pointsGroup.add(cloud);
       });
 
-      if (points) {
-        scene.remove(points);
-      }
-      points = new THREE.Points(geometry, material);
-      scene.add(points);
+      scene.add(pointsGroup);
     };
 
-    const getRanges = (rows, metricField) => {
-      const fields = ["ln_dist", "ln_gdp_prod", metricField, "delta_pred"];
+    const getRanges = (rows, metricField, colorField) => {
+      const fields = ["ln_dist", "ln_gdp_prod", metricField, colorField];
       const ranges = {};
       fields.forEach((field) => {
         const values = rows.map((row) => row[field]);
@@ -698,7 +787,7 @@
         .join("");
     };
 
-    const updateMeta = (metaInfo, rows, totals, metricField) => {
+    const updateMeta = (metaInfo, rows, totals, metricField, colorField) => {
       const warning = metaInfo.warning
         ? `<div style="color:#a56a1a;"><strong>Notice:</strong> ${metaInfo.warning}</div>`
         : "";
@@ -706,8 +795,10 @@
         ${warning}
         <div><strong>Dataset:</strong> ${metaInfo.source}</div>
         <div><strong>Years:</strong> ${metaInfo.years.join(", ")}</div>
-        <div><strong>Top N:</strong> ${metaInfo.top_n}</div>
+        <div><strong>Top N (dataset):</strong> ${metaInfo.top_n}</div>
+        <div><strong>Top N (filter):</strong> ${state.topN}</div>
         <div><strong>Rows in view:</strong> ${rows.length}</div>
+        <div><strong>Color:</strong> ${colorSelect.options[colorSelect.selectedIndex].text}</div>
         <div><strong>Baseline total:</strong> ${formatNumber(totals.base)}</div>
         <div><strong>Counterfactual total:</strong> ${formatNumber(totals.cf)}</div>
         <div><strong>Δ total:</strong> ${formatNumber(totals.delta)}</div>
@@ -769,13 +860,33 @@
         state.year = years[years.length - 1];
         yearSelect.value = state.year;
         metricSelect.value = state.metric;
+        colorSelect.value = state.colorMetric;
+        topNSlider.value = state.topN;
+        sizeSlider.value = state.sizeScale;
         updateLabels();
 
         const applyScenario = () => {
           const year = parseInt(state.year, 10);
           const yearRows = rowsByYear[year] || [];
+          const maxRows = yearRows.length || 1;
+          topNSlider.max = maxRows;
+          topNSlider.min = Math.min(50, maxRows);
+          if (state.topN > maxRows) {
+            state.topN = maxRows;
+            topNSlider.value = state.topN;
+            updateLabels();
+          }
+          if (state.topN < parseInt(topNSlider.min, 10)) {
+            state.topN = parseInt(topNSlider.min, 10);
+            topNSlider.value = state.topN;
+            updateLabels();
+          }
 
-          const computed = yearRows.map((row) => {
+          const topRows = [...yearRows]
+            .sort((a, b) => b.trade_value_usd_millions - a.trade_value_usd_millions)
+            .slice(0, state.topN);
+
+          const computed = topRows.map((row) => {
             const deltaEta =
               (state.shocks.dist - 1) * getCoeff("ln_dist") * row.ln_dist +
               (state.shocks.contig - 1) * getCoeff("contig") * row.contig +
@@ -786,15 +897,18 @@
             const etaCf = row.base_eta + deltaEta;
             const tradeCf = Math.exp(etaCf);
             const deltaPred = tradeCf - row.trade_pred;
+            const pctChange = row.trade_pred > 0 ? deltaPred / row.trade_pred : 0;
 
             return {
               ...row,
               trade_cf: tradeCf,
               delta_pred: deltaPred,
               residual: row.trade_value_usd_millions - row.trade_pred,
+              pct_change: pctChange,
               z_actual: log1p(row.trade_value_usd_millions),
               z_pred: log1p(row.trade_pred),
               z_cf: log1p(tradeCf),
+              z_pct: pctChange,
             };
           });
 
@@ -803,9 +917,11 @@
           if (state.metric === "cf") metricField = "z_cf";
           if (state.metric === "delta") metricField = "delta_pred";
           if (state.metric === "residual") metricField = "residual";
+          if (state.metric === "pct") metricField = "z_pct";
 
-          const ranges = getRanges(computed, metricField);
-          buildPoints(computed, ranges, metricField);
+          const colorField = state.colorMetric;
+          const ranges = getRanges(computed, metricField, colorField);
+          buildPoints(computed, ranges, metricField, colorField, state.sizeScale);
           updateLeaderboard(computed);
 
           const totals = computed.reduce(
@@ -818,12 +934,15 @@
           );
           totals.delta = totals.cf - totals.base;
 
-          updateMeta(metaInfo, computed, totals, metricField);
+          updateMeta(metaInfo, computed, totals, metricField, colorField);
         };
 
         const updateState = () => {
           state.year = yearSelect.value;
           state.metric = metricSelect.value;
+          state.colorMetric = colorSelect.value;
+          state.topN = parseInt(topNSlider.value, 10);
+          state.sizeScale = parseFloat(sizeSlider.value);
           state.shocks.dist = parseFloat(distSlider.value);
           state.shocks.contig = parseFloat(contigSlider.value);
           state.shocks.lang = parseFloat(langSlider.value);
@@ -835,8 +954,9 @@
 
         yearSelect.addEventListener("change", updateState);
         metricSelect.addEventListener("change", updateState);
-        [distSlider, contigSlider, langSlider, colSlider, rtaSlider].forEach((control) =>
-          control.addEventListener("input", updateState)
+        colorSelect.addEventListener("change", updateState);
+        [topNSlider, sizeSlider, distSlider, contigSlider, langSlider, colSlider, rtaSlider].forEach(
+          (control) => control.addEventListener("input", updateState)
         );
 
         console.log('[INIT] Calling updateState for first render...');
@@ -849,10 +969,13 @@
           pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
           pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
           raycaster.setFromCamera(pointer, camera);
-          const intersects = raycaster.intersectObject(points);
+          if (!pointsGroup) return;
+          const intersects = raycaster.intersectObjects(pointsGroup.children);
           if (intersects.length) {
-            const idx = intersects[0].index;
-            const row = pointMeta[idx];
+            const hit = intersects[0];
+            const idxAttr = hit.object.geometry.getAttribute("rowIndex");
+            const rowIndex = Math.round(idxAttr.getX(hit.index));
+            const row = pointMeta[rowIndex];
             tooltip.style.opacity = 1;
             tooltip.style.left = `${event.offsetX + 12}px`;
             tooltip.style.top = `${event.offsetY + 12}px`;
@@ -862,6 +985,7 @@
               <div>Baseline: ${formatNumber(row.trade_pred)}</div>
               <div>Counterfactual: ${formatNumber(row.trade_cf)}</div>
               <div>Δ Predicted: ${formatNumber(row.delta_pred)}</div>
+              <div>Δ %: ${(row.pct_change * 100).toFixed(2)}%</div>
               <div>ln(dist): ${formatNumber(row.ln_dist)}</div>
             `;
           } else {
