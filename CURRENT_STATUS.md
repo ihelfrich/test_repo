@@ -18,6 +18,7 @@
 
 ### Interactive Visualizations
 - ✅ **Gravity Explorer** - Multi-model 3D visualization with counterfactuals
+- ✅ **Policy Lab** - GE-style counterfactuals for tariffs/RTAs (top-20 sample)
 - ✅ **Topology Signals** - Real-time field dynamics with shock scenarios
 - ✅ **Research Lab** - Data-backed metrics with year-by-year trends
 - ✅ Landing page, methodology docs, trade sphere, residual surface
@@ -28,6 +29,7 @@
 - ✅ **Script 13** (NEW): Pipeline validation suite
 - ✅ **Script 14** (NEW): Network metrics (centrality, PageRank, clustering)
 - ✅ **Script 15** (NEW): Master analysis with automated insights
+- ✅ **Script 17** (NEW): Policy Lab payload generation
 
 ### Data Files Generated
 ```
@@ -37,6 +39,8 @@ docs/data/
 ├── research_summary.json (8.6KB) - Research Lab metrics
 ├── country_embedding.json (5.2KB) - MDS coordinates
 ├── network_metrics.json (NEW) - Network diagnostics
+├── policy_lab.json (NEW) - Policy Lab baseline data
+├── world-110m.json (NEW) - Local world atlas for Trade Map
 └── master_report.json (NEW) - Comprehensive analysis
 ```
 

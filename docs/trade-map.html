@@ -271,6 +271,7 @@
         <li><a href="index.html">Tool</a></li>
         <li><a href="trade-sphere.html">Trade Sphere</a></li>
         <li><a href="trade-map.html">Trade Map</a></li>
+        <li><a href="policy-lab.html">Policy Lab</a></li>
         <li><a href="residual-surface.html">Residual Surface</a></li>
         <li><a href="model-lab.html">Model Lab</a></li>
         <li><a href="topology.html">Topology</a></li>
@@ -360,7 +361,8 @@
   <script>
     const dataUrl = new URL('data/baci_gravity_viz.json', window.location.href).href;
     const isoMapUrl = new URL('data/iso3_numeric_map.json', window.location.href).href;
-    const topoUrl = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json';
+    const topoUrlLocal = new URL('data/world-110m.json', window.location.href).href;
+    const topoUrlRemote = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json';
 
     const yearSelect = document.getElementById('yearSelect');
     const yearLabel = document.getElementById('yearLabel');
@@ -538,9 +540,20 @@
     }
 
     async function loadCentroids() {
+      let topoResponse = await fetch(topoUrlLocal, { cache: 'no-store' });
+      if (!topoResponse.ok) {
+        topoResponse = await fetch(topoUrlRemote, { cache: 'no-store' });
+      }
+      if (!topoResponse.ok) {
+        throw new Error('World atlas fetch failed');
+      }
+
       const [topo, isoMap] = await Promise.all([
-        fetch(topoUrl, { cache: 'no-store' }).then(r => r.json()),
-        fetch(isoMapUrl, { cache: 'no-store' }).then(r => r.json())
+        topoResponse.json(),
+        fetch(isoMapUrl, { cache: 'no-store' }).then(r => {
+          if (!r.ok) throw new Error('ISO map fetch failed');
+          return r.json();
+        })
       ]);
 
       const features = topojson.feature(topo, topo.objects.countries).features;

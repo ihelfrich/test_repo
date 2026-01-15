@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Policy Lab | Trade Counterfactuals</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: #0f1c2f;
+      --panel-alt: #14243a;
+      --ink: #e9eef5;
+      --muted: #8a96a8;
+      --accent: #2f9c95;
+      --accent-warm: #f4b34a;
+      --danger: #f97316;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Sora", sans-serif;
+      background: radial-gradient(circle at 20% 20%, #1a2b44 0%, #0b1220 55%, #080f18 100%);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(12px);
+      background: rgba(11, 18, 32, 0.92);
+      border-bottom: 1px solid rgba(233, 238, 245, 0.08);
+    }
+
+    .nav-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 32px;
+    }
+
+    .logo {
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      color: var(--ink);
+    }
+
+    nav ul {
+      display: flex;
+      gap: 22px;
+      list-style: none;
+      flex-wrap: wrap;
+    }
+
+    nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+    }
+
+    nav a:hover {
+      color: var(--ink);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(300px, 360px) 1fr;
+      min-height: calc(100vh - 64px);
+    }
+
+    .sidebar {
+      background: rgba(15, 28, 47, 0.96);
+      border-right: 1px solid rgba(233, 238, 245, 0.08);
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .sidebar h1 {
+      font-size: 22px;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #2f9c95 0%, #f4b34a 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+      margin-bottom: 18px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid rgba(233, 238, 245, 0.06);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 16px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .panel h2 {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1.4px;
+      color: var(--accent-warm);
+      margin-bottom: 12px;
+    }
+
+    label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    select,
+    input[type="range"] {
+      width: 100%;
+      margin-bottom: 12px;
+    }
+
+    select {
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(233, 238, 245, 0.12);
+      background: #0f1825;
+      color: var(--ink);
+      font-family: inherit;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(148, 163, 184, 0.2);
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #2f9c95, #f4b34a);
+      cursor: pointer;
+    }
+
+    .value {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 12px;
+      color: var(--ink);
+      margin-top: -8px;
+      margin-bottom: 12px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #2f9c95 0%, #f4b34a 100%);
+      border: none;
+      border-radius: 10px;
+      color: #0f1825;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+
+    .main {
+      padding: 24px;
+    }
+
+    .hero {
+      background: var(--panel);
+      border-radius: 18px;
+      padding: 20px 24px;
+      border: 1px solid rgba(233, 238, 245, 0.08);
+      margin-bottom: 16px;
+    }
+
+    .hero h2 {
+      font-size: 18px;
+      margin-bottom: 6px;
+    }
+
+    .hero p {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .card {
+      background: var(--panel);
+      border-radius: 14px;
+      padding: 14px;
+      border: 1px solid rgba(233, 238, 245, 0.06);
+    }
+
+    .card span {
+      display: block;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .card strong {
+      font-size: 18px;
+      font-family: "IBM Plex Mono", monospace;
+      color: var(--ink);
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      margin-top: 8px;
+    }
+
+    .table th,
+    .table td {
+      text-align: left;
+      padding: 8px 6px;
+      border-bottom: 1px solid rgba(233, 238, 245, 0.08);
+    }
+
+    .table th {
+      color: var(--muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      background: rgba(47, 156, 149, 0.18);
+      color: #c6f2ea;
+    }
+
+    .note {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 10px;
+    }
+
+    @media (max-width: 1100px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-container">
+      <div class="logo">Gravity Trade Analysis</div>
+      <ul>
+        <li><a href="landing.html">Home</a></li>
+        <li><a href="index.html">Tool</a></li>
+        <li><a href="trade-map.html">Trade Map</a></li>
+        <li><a href="trade-sphere.html">Trade Sphere</a></li>
+        <li><a href="policy-lab.html">Policy Lab</a></li>
+        <li><a href="model-lab.html">Model Lab</a></li>
+        <li><a href="topology.html">Topology</a></li>
+        <li><a href="advanced_topology.html">Research Lab</a></li>
+        <li><a href="methodology.html">Methodology</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <h1>Policy Lab</h1>
+      <p class="subtitle">
+        GE-style counterfactuals on the top-20 sample. Use this to prototype
+        tariff or RTA shocks before running full-sample estimation.
+      </p>
+
+      <div class="panel">
+        <h2>Scenario Setup</h2>
+        <label>Year <span id="yearLabel">-</span></label>
+        <select id="yearSelect"></select>
+
+        <label>Shock Type</label>
+        <select id="shockType">
+          <option value="import_tariff">Importer-wide tariff</option>
+          <option value="bilateral_tariff">Bilateral tariff (partner → target)</option>
+          <option value="rta">RTA cost reduction (pair)</option>
+          <option value="global_tariff">Global tariff shock</option>
+        </select>
+
+        <label>Target country</label>
+        <select id="targetSelect"></select>
+
+        <label>Partner (for bilateral / RTA)</label>
+        <select id="partnerSelect"></select>
+
+        <label>Tariff / cost change <span id="tariffLabel">10%</span></label>
+        <input type="range" id="tariff" min="0" max="30" step="1" value="10" />
+        <div class="value">Positive = higher trade costs. For RTA, this is a reduction.</div>
+
+        <label>Trade elasticity θ <span id="thetaLabel">5.0</span></label>
+        <input type="range" id="theta" min="2" max="10" step="0.5" value="5" />
+        <div class="value">Higher θ → stronger response to trade costs.</div>
+
+        <button id="runBtn">Run Counterfactual</button>
+        <div class="note" id="dataNote">Loading policy lab data…</div>
+      </div>
+
+      <div class="panel">
+        <h2>Method Notes</h2>
+        <div class="note">
+          The solver iterates exporter and importer price indices using baseline
+          trade shares (structural gravity). Results are illustrative for the
+          top‑20 sample and should be re-estimated on the full dataset for
+          publication-grade policy work.
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <section class="hero">
+        <h2>Policy Impact Summary <span class="pill" id="statusPill">Ready</span></h2>
+        <p id="summaryText">Run a counterfactual to see trade and welfare impacts.</p>
+      </section>
+
+      <section class="grid">
+        <div class="card">
+          <span>Total trade change</span>
+          <strong id="tradeChange">-</strong>
+        </div>
+        <div class="card">
+          <span>Average welfare change</span>
+          <strong id="avgWelfare">-</strong>
+        </div>
+        <div class="card">
+          <span>Largest winner</span>
+          <strong id="winner">-</strong>
+        </div>
+        <div class="card">
+          <span>Largest loser</span>
+          <strong id="loser">-</strong>
+        </div>
+      </section>
+
+      <section class="card">
+        <span>Country welfare changes</span>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Country</th>
+              <th>Δ Welfare (%)</th>
+              <th>Δ Exports (%)</th>
+              <th>Δ Imports (%)</th>
+            </tr>
+          </thead>
+          <tbody id="welfareTable"></tbody>
+        </table>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const dataUrl = new URL('data/policy_lab.json', window.location.href).href;
+
+    const yearSelect = document.getElementById('yearSelect');
+    const yearLabel = document.getElementById('yearLabel');
+    const shockType = document.getElementById('shockType');
+    const targetSelect = document.getElementById('targetSelect');
+    const partnerSelect = document.getElementById('partnerSelect');
+    const tariffSlider = document.getElementById('tariff');
+    const tariffLabel = document.getElementById('tariffLabel');
+    const thetaSlider = document.getElementById('theta');
+    const thetaLabel = document.getElementById('thetaLabel');
+    const runBtn = document.getElementById('runBtn');
+    const dataNote = document.getElementById('dataNote');
+    const statusPill = document.getElementById('statusPill');
+    const summaryText = document.getElementById('summaryText');
+    const tradeChange = document.getElementById('tradeChange');
+    const avgWelfare = document.getElementById('avgWelfare');
+    const winner = document.getElementById('winner');
+    const loser = document.getElementById('loser');
+    const welfareTable = document.getElementById('welfareTable');
+
+    let payload = null;
+
+    function formatPct(value) {
+      if (!Number.isFinite(value)) return '-';
+      return `${value.toFixed(2)}%`;
+    }
+
+    function formatNumber(value) {
+      if (!Number.isFinite(value)) return '-';
+      return value.toLocaleString(undefined, { maximumFractionDigits: 0 });
+    }
+
+    function buildDeltaMatrix(n, shock) {
+      const delta = Array.from({ length: n }, () => Array(n).fill(1));
+      const tau = shock.rate;
+
+      if (shock.type === 'global_tariff') {
+        for (let i = 0; i < n; i++) {
+          for (let j = 0; j < n; j++) {
+            if (i !== j) delta[i][j] = 1 + tau;
+          }
+        }
+        return delta;
+      }
+
+      if (shock.type === 'import_tariff') {
+        for (let i = 0; i < n; i++) {
+          if (i === shock.target) continue;
+          delta[i][shock.target] = 1 + tau;
+        }
+        return delta;
+      }
+
+      if (shock.type === 'bilateral_tariff') {
+        if (shock.partner !== null) {
+          delta[shock.partner][shock.target] = 1 + tau;
+        }
+        return delta;
+      }
+
+      if (shock.type === 'rta') {
+        const reduction = Math.max(0, Math.min(0.5, tau));
+        if (shock.partner !== null) {
+          delta[shock.partner][shock.target] = 1 - reduction;
+          delta[shock.target][shock.partner] = 1 - reduction;
+        }
+      }
+
+      return delta;
+    }
+
+    function solveCounterfactual(yearKey, shock, theta) {
+      const yearData = payload.by_year[yearKey];
+      const flows = yearData.flows_pred;
+      const exportShares = yearData.export_shares;
+      const importShares = yearData.import_shares;
+      const exports = yearData.exports_pred;
+      const imports = yearData.imports_pred;
+      const n = exports.length;
+
+      const delta = buildDeltaMatrix(n, shock);
+      const phi = delta.map(row => row.map(value => Math.pow(value, -theta)));
+
+      let P = Array(n).fill(1);
+      let Pi = Array(n).fill(1);
+      const maxIter = 200;
+      const tol = 1e-6;
+
+      for (let iter = 0; iter < maxIter; iter++) {
+        const P_new = Array(n).fill(0);
+        const Pi_new = Array(n).fill(0);
+
+        for (let i = 0; i < n; i++) {
+          let sum = 0;
+          for (let j = 0; j < n; j++) {
+            sum += exportShares[i][j] * phi[i][j] * Math.pow(Pi[j], theta - 1);
+          }
+          P_new[i] = Math.pow(sum, 1 / (1 - theta));
+        }
+
+        for (let j = 0; j < n; j++) {
+          let sum = 0;
+          for (let i = 0; i < n; i++) {
+            sum += importShares[i][j] * phi[i][j] * Math.pow(P_new[i], theta - 1);
+          }
+          Pi_new[j] = Math.pow(sum, 1 / (1 - theta));
+        }
+
+        let diff = 0;
+        for (let i = 0; i < n; i++) {
+          diff = Math.max(diff, Math.abs(P_new[i] - P[i]), Math.abs(Pi_new[i] - Pi[i]));
+          P[i] = 0.6 * P[i] + 0.4 * P_new[i];
+          Pi[i] = 0.6 * Pi[i] + 0.4 * Pi_new[i];
+        }
+
+        if (diff < tol) break;
+      }
+
+      const flows_cf = Array.from({ length: n }, () => Array(n).fill(0));
+      const exports_cf = Array(n).fill(0);
+      const imports_cf = Array(n).fill(0);
+
+      for (let i = 0; i < n; i++) {
+        for (let j = 0; j < n; j++) {
+          const base = flows[i][j];
+          const scale = phi[i][j] * Math.pow(P[i], theta - 1) * Math.pow(Pi[j], theta - 1);
+          const val = base * scale;
+          flows_cf[i][j] = val;
+          exports_cf[i] += val;
+          imports_cf[j] += val;
+        }
+      }
+
+      const welfare = P.map(value => Math.pow(value, -1 / (theta - 1)));
+
+      return {
+        exports,
+        imports,
+        exports_cf,
+        imports_cf,
+        total_trade: exports.reduce((a, b) => a + b, 0),
+        total_trade_cf: exports_cf.reduce((a, b) => a + b, 0),
+        welfare
+      };
+    }
+
+    function renderResults(results, theta) {
+      const countries = payload.meta.countries;
+      const names = payload.meta.country_names || {};
+
+      const tradeDelta = (results.total_trade_cf / results.total_trade - 1) * 100;
+      const welfareChanges = results.welfare.map(value => (value - 1) * 100);
+      const avgW = welfareChanges.reduce((a, b) => a + b, 0) / welfareChanges.length;
+
+      const entries = countries.map((iso, idx) => ({
+        iso,
+        name: names[iso] || iso,
+        welfare: welfareChanges[idx],
+        exportDelta: (results.exports_cf[idx] / results.exports[idx] - 1) * 100,
+        importDelta: (results.imports_cf[idx] / results.imports[idx] - 1) * 100
+      }));
+
+      entries.sort((a, b) => b.welfare - a.welfare);
+      const best = entries[0];
+      const worst = entries[entries.length - 1];
+
+      tradeChange.textContent = formatPct(tradeDelta);
+      avgWelfare.textContent = formatPct(avgW);
+      winner.textContent = `${best.iso} ${formatPct(best.welfare)}`;
+      loser.textContent = `${worst.iso} ${formatPct(worst.welfare)}`;
+
+      welfareTable.innerHTML = '';
+      entries.slice(0, 10).forEach(entry => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${entry.iso}</td>
+          <td>${formatPct(entry.welfare)}</td>
+          <td>${formatPct(entry.exportDelta)}</td>
+          <td>${formatPct(entry.importDelta)}</td>
+        `;
+        welfareTable.appendChild(row);
+      });
+
+      summaryText.textContent = `Theta ${theta.toFixed(1)} with ${entries.length} countries. Results are relative to baseline predicted trade.`;
+    }
+
+    function runSimulation() {
+      if (!payload) return;
+      const yearKey = yearSelect.value;
+      const theta = parseFloat(thetaSlider.value);
+      const rate = parseFloat(tariffSlider.value) / 100;
+      const shock = {
+        type: shockType.value,
+        target: targetSelect.selectedIndex,
+        partner: partnerSelect.selectedIndex,
+        rate
+      };
+
+      if (shock.type === 'global_tariff') {
+        shock.target = null;
+        shock.partner = null;
+      }
+
+      if (shock.type === 'import_tariff') {
+        shock.partner = null;
+      }
+
+      const results = solveCounterfactual(yearKey, shock, theta);
+      renderResults(results, theta);
+      statusPill.textContent = 'Updated';
+    }
+
+    function populateSelectors() {
+      const years = payload.meta.years || [];
+      yearSelect.innerHTML = '';
+      years.forEach(year => {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        yearSelect.appendChild(option);
+      });
+      yearSelect.value = years[years.length - 1];
+      yearLabel.textContent = yearSelect.value;
+
+      const countries = payload.meta.countries || [];
+      targetSelect.innerHTML = '';
+      partnerSelect.innerHTML = '';
+      countries.forEach(iso => {
+        const option = document.createElement('option');
+        option.value = iso;
+        option.textContent = iso;
+        targetSelect.appendChild(option);
+      });
+      countries.forEach(iso => {
+        const option = document.createElement('option');
+        option.value = iso;
+        option.textContent = iso;
+        partnerSelect.appendChild(option);
+      });
+      targetSelect.value = countries[0];
+      partnerSelect.value = countries[1] || countries[0];
+    }
+
+    async function init() {
+      try {
+        const response = await fetch(dataUrl, { cache: 'no-store' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        payload = await response.json();
+        populateSelectors();
+        dataNote.textContent = `Source: ${payload.meta.source} · ${payload.meta.countries.length} countries.`;
+        runSimulation();
+      } catch (err) {
+        console.warn('Policy Lab data load failed', err);
+        dataNote.textContent = 'Unable to load policy lab data; run scripts/17_build_policy_lab_data.py.';
+      }
+    }
+
+    yearSelect.addEventListener('change', () => {
+      yearLabel.textContent = yearSelect.value;
+      runSimulation();
+    });
+    shockType.addEventListener('change', runSimulation);
+    targetSelect.addEventListener('change', runSimulation);
+    partnerSelect.addEventListener('change', runSimulation);
+    tariffSlider.addEventListener('input', () => {
+      tariffLabel.textContent = `${tariffSlider.value}%`;
+      runSimulation();
+    });
+    thetaSlider.addEventListener('input', () => {
+      thetaLabel.textContent = thetaSlider.value;
+      runSimulation();
+    });
+    runBtn.addEventListener('click', runSimulation);
+
+    init();
+  </script>
+</body>
+</html>

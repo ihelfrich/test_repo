@@ -564,3 +564,4 @@ Full Methodology (Technical Depth)
 - 2026-01-15 04:34:30 -0600: Generated network metrics (docs/data/network_metrics.json), updated master report, fixed country embedding schema, expanded validator (7/7 tests), and wired network diagnostics into Research Lab.
 - 2026-01-15 04:48:16 -0600: Fixed topology view layout (responsive grid, scroll), added HiDPI canvas scaling for crisp rendering, revalidated pipeline (7/7).
 - 2026-01-15 10:56:55 -0600: Added Leaflet-based Trade Map view, generated ISO numeric mapping for centroids, and wired Trade Map into site navigation.
+- 2026-01-15 11:38:54 -0600: Added Policy Lab (GE-style counterfactuals) with data payload and UI; added local world atlas fallback for Trade Map reliability; wired Policy Lab into navigation.
