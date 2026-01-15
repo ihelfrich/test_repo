@@ -1,0 +1,810 @@
+{
+  "meta": {
+    "title": "Comprehensive Trade Network Analysis Report",
+    "generated": "2026-01-15T04:32:30.306514"
+  },
+  "data_overview": {
+    "coverage": {
+      "years": [
+        2005,
+        2006,
+        2007,
+        2008,
+        2009,
+        2010,
+        2011,
+        2012,
+        2013,
+        2014,
+        2015,
+        2016,
+        2017,
+        2018,
+        2019,
+        2020,
+        2021
+      ],
+      "num_years": 17,
+      "countries": 21,
+      "grid_size": 64,
+      "total_observations": 5848
+    },
+    "data_sources": {
+      "topology_source": "BACI bilateral totals + CEPII gravity (visualization subset)",
+      "summary_source": "BACI bilateral totals + CEPII gravity (visualization subset)",
+      "field_type": "log_trade_gap (actual - predicted, log1p)",
+      "method": "Midpoint gridding with bilinear weights + Gaussian blur"
+    }
+  },
+  "temporal_evolution": {
+    "field_variance_trend": [
+      {
+        "year": 2005,
+        "variance": 0.015958642157174803
+      },
+      {
+        "year": 2006,
+        "variance": 0.014930655222725301
+      },
+      {
+        "year": 2007,
+        "variance": 0.013722344407882229
+      },
+      {
+        "year": 2008,
+        "variance": 0.012659049300402351
+      },
+      {
+        "year": 2009,
+        "variance": 0.012831899297783524
+      },
+      {
+        "year": 2010,
+        "variance": 0.01308251133766605
+      },
+      {
+        "year": 2011,
+        "variance": 0.01285301970993127
+      },
+      {
+        "year": 2012,
+        "variance": 0.012588363515666931
+      },
+      {
+        "year": 2013,
+        "variance": 0.012806732203573108
+      },
+      {
+        "year": 2014,
+        "variance": 0.012332037107988967
+      },
+      {
+        "year": 2015,
+        "variance": 0.011308975489392185
+      },
+      {
+        "year": 2016,
+        "variance": 0.01054794745492257
+      },
+      {
+        "year": 2017,
+        "variance": 0.010429581149196916
+      },
+      {
+        "year": 2018,
+        "variance": 0.009693249650956429
+      },
+      {
+        "year": 2019,
+        "variance": 0.009792019699963473
+      },
+      {
+        "year": 2020,
+        "variance": 0.010534853646531225
+      },
+      {
+        "year": 2021,
+        "variance": 0.010839510290642174
+      }
+    ],
+    "trade_volume_trend": [
+      {
+        "year": 2005,
+        "total_trade_usd_millions": 5196002658.931
+      },
+      {
+        "year": 2006,
+        "total_trade_usd_millions": 5945364386.047
+      },
+      {
+        "year": 2007,
+        "total_trade_usd_millions": 6714900466.791
+      },
+      {
+        "year": 2008,
+        "total_trade_usd_millions": 7412460912.363
+      },
+      {
+        "year": 2009,
+        "total_trade_usd_millions": 5774350202.558001
+      },
+      {
+        "year": 2010,
+        "total_trade_usd_millions": 6933548993.814
+      },
+      {
+        "year": 2011,
+        "total_trade_usd_millions": 8118922399.858999
+      },
+      {
+        "year": 2012,
+        "total_trade_usd_millions": 8169088477.071001
+      },
+      {
+        "year": 2013,
+        "total_trade_usd_millions": 8295954069.219
+      },
+      {
+        "year": 2014,
+        "total_trade_usd_millions": 8441713754.936999
+      },
+      {
+        "year": 2015,
+        "total_trade_usd_millions": 7526643831.306
+      },
+      {
+        "year": 2016,
+        "total_trade_usd_millions": 7360801798.481
+      },
+      {
+        "year": 2017,
+        "total_trade_usd_millions": 8040668213.1970005
+      },
+      {
+        "year": 2018,
+        "total_trade_usd_millions": 8771049640.291
+      },
+      {
+        "year": 2019,
+        "total_trade_usd_millions": 8463353224.53
+      },
+      {
+        "year": 2020,
+        "total_trade_usd_millions": 7871230070.009
+      },
+      {
+        "year": 2021,
+        "total_trade_usd_millions": 9651518319.990002
+      }
+    ],
+    "residual_dispersion_trend": [
+      {
+        "year": 2005,
+        "residual_std": 0.7828453776015122
+      },
+      {
+        "year": 2006,
+        "residual_std": 0.7937595803840346
+      },
+      {
+        "year": 2007,
+        "residual_std": 0.7765808918459366
+      },
+      {
+        "year": 2008,
+        "residual_std": 0.7770426705294187
+      },
+      {
+        "year": 2009,
+        "residual_std": 0.7594365530069844
+      },
+      {
+        "year": 2010,
+        "residual_std": 0.7498804590172271
+      },
+      {
+        "year": 2011,
+        "residual_std": 0.7332231686960816
+      },
+      {
+        "year": 2012,
+        "residual_std": 0.7286196225213144
+      },
+      {
+        "year": 2013,
+        "residual_std": 0.7491867240511014
+      },
+      {
+        "year": 2014,
+        "residual_std": 0.7827699914617053
+      },
+      {
+        "year": 2015,
+        "residual_std": 0.7537479456497176
+      },
+      {
+        "year": 2016,
+        "residual_std": 0.7064866993098836
+      },
+      {
+        "year": 2017,
+        "residual_std": 0.7296464432927199
+      },
+      {
+        "year": 2018,
+        "residual_std": 0.6917242491761543
+      },
+      {
+        "year": 2019,
+        "residual_std": 0.6840222032612445
+      },
+      {
+        "year": 2020,
+        "residual_std": 0.6831054440015825
+      },
+      {
+        "year": 2021,
+        "residual_std": 0.7028671882959424
+      }
+    ],
+    "wasserstein_shift_trend": [
+      {
+        "year": 2005,
+        "shift": 0.0
+      },
+      {
+        "year": 2006,
+        "shift": 0.028211665249804674
+      },
+      {
+        "year": 2007,
+        "shift": 0.03336874507326265
+      },
+      {
+        "year": 2008,
+        "shift": 0.030430123396946784
+      },
+      {
+        "year": 2009,
+        "shift": 0.030359395926826134
+      },
+      {
+        "year": 2010,
+        "shift": 0.04072246812747348
+      },
+      {
+        "year": 2011,
+        "shift": 0.03777329975753927
+      },
+      {
+        "year": 2012,
+        "shift": 0.02612539744593828
+      },
+      {
+        "year": 2013,
+        "shift": 0.02881408894223607
+      },
+      {
+        "year": 2014,
+        "shift": 0.03898235946119624
+      },
+      {
+        "year": 2015,
+        "shift": 0.03659264553227065
+      },
+      {
+        "year": 2016,
+        "shift": 0.045275781527087264
+      },
+      {
+        "year": 2017,
+        "shift": 0.03416309686672288
+      },
+      {
+        "year": 2018,
+        "shift": 0.0307190535705453
+      },
+      {
+        "year": 2019,
+        "shift": 0.024137348650557854
+      },
+      {
+        "year": 2020,
+        "shift": 0.04491176885695168
+      },
+      {
+        "year": 2021,
+        "shift": 0.034570842279927114
+      }
+    ],
+    "concentration_trend": [
+      {
+        "year": 2005,
+        "export_hhi": 0.07803455576342844,
+        "import_hhi": 0.09334222683402674
+      },
+      {
+        "year": 2006,
+        "export_hhi": 0.07910779929929548,
+        "import_hhi": 0.09068992497697073
+      },
+      {
+        "year": 2007,
+        "export_hhi": 0.08026871048057577,
+        "import_hhi": 0.0853454997610954
+      },
+      {
+        "year": 2008,
+        "export_hhi": 0.0797982472519828,
+        "import_hhi": 0.08177298566096554
+      },
+      {
+        "year": 2009,
+        "export_hhi": 0.08235441675486992,
+        "import_hhi": 0.08046912250589221
+      },
+      {
+        "year": 2010,
+        "export_hhi": 0.08472143712307163,
+        "import_hhi": 0.08220773077380497
+      },
+      {
+        "year": 2011,
+        "export_hhi": 0.08278704112723909,
+        "import_hhi": 0.08033761182066157
+      },
+      {
+        "year": 2012,
+        "export_hhi": 0.083672159300123,
+        "import_hhi": 0.08337213620395069
+      },
+      {
+        "year": 2013,
+        "export_hhi": 0.08582063861415089,
+        "import_hhi": 0.08397069822707695
+      },
+      {
+        "year": 2014,
+        "export_hhi": 0.08728306681738988,
+        "import_hhi": 0.08584194827673983
+      },
+      {
+        "year": 2015,
+        "export_hhi": 0.0946325276238039,
+        "import_hhi": 0.09118136268998861
+      },
+      {
+        "year": 2016,
+        "export_hhi": 0.09255712015847177,
+        "import_hhi": 0.0897470388269207
+      },
+      {
+        "year": 2017,
+        "export_hhi": 0.09151443075547641,
+        "import_hhi": 0.08869909053844185
+      },
+      {
+        "year": 2018,
+        "export_hhi": 0.08966182471199237,
+        "import_hhi": 0.08896086115929677
+      },
+      {
+        "year": 2019,
+        "export_hhi": 0.08900757816564668,
+        "import_hhi": 0.08894314068462914
+      },
+      {
+        "year": 2020,
+        "export_hhi": 0.09429963299761163,
+        "import_hhi": 0.09006553966605467
+      },
+      {
+        "year": 2021,
+        "export_hhi": 0.09305341017883444,
+        "import_hhi": 0.08790997890549362
+      }
+    ]
+  },
+  "topology_insights": {
+    "field_extremes": {
+      "max_variance_year": {
+        "year": 2005,
+        "variance": 0.015958642157174803
+      },
+      "min_variance_year": {
+        "year": 2018,
+        "variance": 0.009693249650956429
+      },
+      "max_mean_year": {
+        "year": 2019,
+        "mean": -0.01429218578567877
+      },
+      "min_mean_year": {
+        "year": 2005,
+        "mean": -0.02443394511494832
+      }
+    },
+    "field_statistics": {
+      "2005": {
+        "variance": 0.015958642157174803,
+        "mean": -0.02443394511494832,
+        "min": -1.958744113671865,
+        "max": 0.3974929030451133,
+        "range": 2.356237016716978
+      },
+      "2006": {
+        "variance": 0.014930655222725301,
+        "mean": -0.02343703241508987,
+        "min": -1.914570719039486,
+        "max": 0.46237654219562735,
+        "range": 2.3769472612351135
+      },
+      "2007": {
+        "variance": 0.013722344407882229,
+        "mean": -0.021230517636805453,
+        "min": -1.7359391436508065,
+        "max": 0.48517300096853916,
+        "range": 2.2211121446193456
+      },
+      "2008": {
+        "variance": 0.012659049300402351,
+        "mean": -0.019378901459911127,
+        "min": -1.5477401512460451,
+        "max": 0.537674334666591,
+        "range": 2.085414485912636
+      },
+      "2009": {
+        "variance": 0.012831899297783524,
+        "mean": -0.018308650134957645,
+        "min": -1.5921772017878761,
+        "max": 0.6032992418259118,
+        "range": 2.1954764436137877
+      },
+      "2010": {
+        "variance": 0.01308251133766605,
+        "mean": -0.019965812690235205,
+        "min": -1.6452582891713083,
+        "max": 0.5406599561809031,
+        "range": 2.1859182453522115
+      },
+      "2011": {
+        "variance": 0.01285301970993127,
+        "mean": -0.017801175018013017,
+        "min": -1.615339842907468,
+        "max": 0.6922192178317299,
+        "range": 2.307559060739198
+      },
+      "2012": {
+        "variance": 0.012588363515666931,
+        "mean": -0.01730754197395897,
+        "min": -1.4767337806822067,
+        "max": 0.6915013181120422,
+        "range": 2.168235098794249
+      },
+      "2013": {
+        "variance": 0.012806732203573108,
+        "mean": -0.018248259081867717,
+        "min": -1.5211273804305745,
+        "max": 0.6217792501216819,
+        "range": 2.1429066305522566
+      },
+      "2014": {
+        "variance": 0.012332037107988967,
+        "mean": -0.018840680755040844,
+        "min": -1.4822678927543094,
+        "max": 0.5155871208381982,
+        "range": 1.9978550135925075
+      },
+      "2015": {
+        "variance": 0.011308975489392185,
+        "mean": -0.020096970460583268,
+        "min": -1.2392619436778194,
+        "max": 0.4794812224126605,
+        "range": 1.71874316609048
+      },
+      "2016": {
+        "variance": 0.01054794745492257,
+        "mean": -0.017166693183764486,
+        "min": -1.2031668032516694,
+        "max": 0.5082130234356418,
+        "range": 1.711379826687311
+      },
+      "2017": {
+        "variance": 0.010429581149196916,
+        "mean": -0.016163172377129036,
+        "min": -1.2115990232638973,
+        "max": 0.5328586384158567,
+        "range": 1.744457661679754
+      },
+      "2018": {
+        "variance": 0.009693249650956429,
+        "mean": -0.014632914682926178,
+        "min": -1.197159442109665,
+        "max": 0.7122014125358143,
+        "range": 1.9093608546454792
+      },
+      "2019": {
+        "variance": 0.009792019699963473,
+        "mean": -0.01429218578567877,
+        "min": -1.2038625238639145,
+        "max": 0.7205983849229338,
+        "range": 1.9244609087868483
+      },
+      "2020": {
+        "variance": 0.010534853646531225,
+        "mean": -0.017126667101186294,
+        "min": -1.2701378764420186,
+        "max": 0.4461346974477848,
+        "range": 1.7162725738898033
+      },
+      "2021": {
+        "variance": 0.010839510290642174,
+        "mean": -0.015437287659464605,
+        "min": -1.3911739457289467,
+        "max": 0.7357290282885885,
+        "range": 2.1269029740175354
+      }
+    }
+  },
+  "network_insights": {
+    "latest_year": 2021,
+    "network_stats": {
+      "num_countries": 21,
+      "num_edges": 344,
+      "total_trade_usd_millions": 9651518319.990002,
+      "density": 0.819047619047619,
+      "reciprocity": 0.3953488372093023,
+      "assortativity": -0.0058479532163742505,
+      "global_clustering": 0.9903648008911167
+    },
+    "top_by_pagerank": [
+      [
+        "USA",
+        0.12382100999538398
+      ],
+      [
+        "CHN",
+        0.06668035465070782
+      ],
+      [
+        "DEU",
+        0.05581869922312624
+      ],
+      [
+        "FRA",
+        0.039016213509989725
+      ],
+      [
+        "CAN",
+        0.03808402900076882
+      ]
+    ],
+    "top_by_betweenness": [
+      [
+        "BEL",
+        0.0
+      ],
+      [
+        "CAN",
+        0.0
+      ],
+      [
+        "CHE",
+        0.0
+      ],
+      [
+        "CHN",
+        0.0
+      ],
+      [
+        "DEU",
+        0.0
+      ]
+    ],
+    "density_trend": [
+      {
+        "year": 2005,
+        "density": 0.819047619047619,
+        "reciprocity": 0.3953488372093023,
+        "assortativity": -0.0058479532163742505,
+        "global_clustering": 0.9903648008911167
+      },
+      {
+        "year": 2006,
+        "density": 0.819047619047619,
+        "reciprocity": 0.3953488372093023,
+        "assortativity": -0.0058479532163742505,
+        "global_clustering": 0.9903648008911167
+      },
+      {
+        "year": 2007,
+        "density": 0.819047619047619,
+        "reciprocity": 0.3953488372093023,
+        "assortativity": -0.0058479532163742505,
+        "global_clustering": 0.9903648008911167
+      },
+      {
+        "year": 2008,
+        "density": 0.819047619047619,
+        "reciprocity": 0.3953488372093023,
+        "assortativity": -0.0058479532163742505,
+        "global_clustering": 0.9903648008911167
+      },
+      {
+        "year": 2009,
+        "density": 0.819047619047619,
+        "reciprocity": 0.3953488372093023,
+        "assortativity": -0.0058479532163742505,
+        "global_clustering": 0.9903648008911167
+      },
+      {
+        "year": 2010,
+        "density": 0.819047619047619,
+        "reciprocity": 0.3953488372093023,
+        "assortativity": -0.0058479532163742505,
+        "global_clustering": 0.9903648008911167
+      },
+      {
+        "year": 2011,
+        "density": 0.819047619047619,
+        "reciprocity": 0.3953488372093023,
+        "assortativity": -0.0058479532163742505,
+        "global_clustering": 0.9903648008911167
+      },
+      {
+        "year": 2012,
+        "density": 0.819047619047619,
+        "reciprocity": 0.3953488372093023,
+        "assortativity": -0.0058479532163742505,
+        "global_clustering": 0.9903648008911167
+      },
+      {
+        "year": 2013,
+        "density": 0.819047619047619,
+        "reciprocity": 0.3953488372093023,
+        "assortativity": -0.0058479532163742505,
+        "global_clustering": 0.9903648008911167
+      },
+      {
+        "year": 2014,
+        "density": 0.819047619047619,
+        "reciprocity": 0.3953488372093023,
+        "assortativity": -0.0058479532163742505,
+        "global_clustering": 0.9903648008911167
+      },
+      {
+        "year": 2015,
+        "density": 0.819047619047619,
+        "reciprocity": 0.3953488372093023,
+        "assortativity": -0.0058479532163742505,
+        "global_clustering": 0.9903648008911167
+      },
+      {
+        "year": 2016,
+        "density": 0.819047619047619,
+        "reciprocity": 0.3953488372093023,
+        "assortativity": -0.0058479532163742505,
+        "global_clustering": 0.9903648008911167
+      },
+      {
+        "year": 2017,
+        "density": 0.819047619047619,
+        "reciprocity": 0.3953488372093023,
+        "assortativity": -0.0058479532163742505,
+        "global_clustering": 0.9903648008911167
+      },
+      {
+        "year": 2018,
+        "density": 0.819047619047619,
+        "reciprocity": 0.3953488372093023,
+        "assortativity": -0.0058479532163742505,
+        "global_clustering": 0.9903648008911167
+      },
+      {
+        "year": 2019,
+        "density": 0.819047619047619,
+        "reciprocity": 0.3953488372093023,
+        "assortativity": -0.0058479532163742505,
+        "global_clustering": 0.9903648008911167
+      },
+      {
+        "year": 2020,
+        "density": 0.819047619047619,
+        "reciprocity": 0.3953488372093023,
+        "assortativity": -0.0058479532163742505,
+        "global_clustering": 0.9903648008911167
+      },
+      {
+        "year": 2021,
+        "density": 0.819047619047619,
+        "reciprocity": 0.3953488372093023,
+        "assortativity": -0.0058479532163742505,
+        "global_clustering": 0.9903648008911167
+      }
+    ]
+  },
+  "statistical_tests": {
+    "trend_analysis": {
+      "residual_dispersion": {
+        "slope": -0.006251202212077499,
+        "intercept": 0.7903005125261824,
+        "interpretation": "decreasing"
+      },
+      "trade_volume": {
+        "slope": 185892019.26371825,
+        "intercept": 6082720988.207549,
+        "interpretation": "growing"
+      }
+    },
+    "correlations": {
+      "residual_vs_volume": {
+        "correlation": -0.6389926723988093,
+        "interpretation": "negative"
+      }
+    },
+    "volatility": {
+      "residual_std": {
+        "mean": 0.7402908948295623,
+        "std": 0.03556142366633212,
+        "coefficient_of_variation": 0.04803709448529114
+      },
+      "wasserstein_shift": {
+        "mean": 0.03206812239207567,
+        "std": 0.009961489925020729,
+        "max_shift": 0.045275781527087264
+      }
+    }
+  },
+  "key_findings": [
+    {
+      "category": "Data Coverage",
+      "finding": "Analysis covers 17 years (2005-2021) with 21 countries",
+      "importance": "high",
+      "implication": "Comprehensive temporal and spatial coverage enables robust trend analysis"
+    },
+    {
+      "category": "Structural Changes",
+      "finding": "Largest distribution shifts occurred in years: 2016, 2020, 2010",
+      "importance": "high",
+      "implication": "These years likely correspond to major economic events or policy changes"
+    },
+    {
+      "category": "Residual Dispersion Trend",
+      "finding": "Residual dispersion is decreasing over time (slope: -0.006251)",
+      "importance": "medium",
+      "implication": "Indicates whether gravity model fit is improving or deteriorating"
+    },
+    {
+      "category": "Topological Extremes",
+      "finding": "Maximum field variance observed in 2005",
+      "importance": "medium",
+      "implication": "This year shows highest spatial heterogeneity in trade deviations"
+    }
+  ],
+  "recommendations": [
+    {
+      "category": "Data Quality",
+      "recommendation": "Validate topology fields against known economic events (COVID-19, trade wars)",
+      "priority": "high",
+      "rationale": "Ensures field dynamics capture real-world shocks"
+    },
+    {
+      "category": "Analysis Extension",
+      "recommendation": "Extend network metrics to sector-level flows (HS2) for product-specific centrality",
+      "priority": "medium",
+      "rationale": "Highlights sector-specific chokepoints and supply risk concentrations"
+    },
+    {
+      "category": "Visualization",
+      "recommendation": "Create animated time series showing field evolution",
+      "priority": "medium",
+      "rationale": "Dynamic visualization reveals temporal patterns not visible in static plots"
+    },
+    {
+      "category": "Statistical Modeling",
+      "recommendation": "Develop predictive model for Wasserstein shifts using lagged residuals",
+      "priority": "low",
+      "rationale": "Could provide early warning of structural breaks"
+    }
+  ]
+}

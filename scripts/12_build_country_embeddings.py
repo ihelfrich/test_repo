@@ -83,6 +83,7 @@ def main() -> None:
     coords = normalize(coords)
 
     embeddings = {}
+    embedding_3d = []
     for iso, (x, y) in zip(countries, coords):
         lon = (x - 0.5) * 2 * np.pi
         lat = (y - 0.5) * np.pi
@@ -99,6 +100,7 @@ def main() -> None:
             "y": float(y3),
             "z": float(z3),
         }
+        embedding_3d.append([float(x3), float(y3), float(z3)])
 
     payload = {
         "meta": {
@@ -107,6 +109,9 @@ def main() -> None:
             "radius": 60.0,
             "note": "This is a trade-distance embedding, not geographic coordinates.",
         },
+        "countries": countries,
+        "embedding_2d": coords.tolist(),
+        "embedding_3d": embedding_3d,
         "embeddings": embeddings,
     }
 

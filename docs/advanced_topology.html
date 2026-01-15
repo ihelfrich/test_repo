@@ -175,6 +175,21 @@
       margin-top: 14px;
     }
 
+    .subhead {
+      margin-top: 18px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.4px;
+      color: var(--muted);
+    }
+
+    .network-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
     .metric-card {
       background: rgba(0, 0, 0, 0.18);
       border-radius: 10px;
@@ -195,6 +210,30 @@
       font-size: 16px;
       font-family: "IBM Plex Mono", monospace;
       color: var(--ink);
+    }
+
+    .rank-card {
+      margin-top: 12px;
+      background: rgba(0, 0, 0, 0.18);
+      border-radius: 10px;
+      padding: 10px;
+      border: 1px solid rgba(233, 238, 245, 0.06);
+    }
+
+    .rank-card span {
+      display: block;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .rank-card ol {
+      margin-left: 18px;
+      font-size: 12px;
+      color: var(--ink);
+      line-height: 1.5;
     }
 
     .chart-panel {
@@ -312,6 +351,31 @@
         </div>
       </div>
 
+      <div class="subhead">Network diagnostics</div>
+      <div class="network-grid">
+        <div class="metric-card">
+          <span>Density</span>
+          <strong id="netDensity">-</strong>
+        </div>
+        <div class="metric-card">
+          <span>Reciprocity</span>
+          <strong id="netReciprocity">-</strong>
+        </div>
+        <div class="metric-card">
+          <span>Assortativity</span>
+          <strong id="netAssortativity">-</strong>
+        </div>
+        <div class="metric-card">
+          <span>Clustering</span>
+          <strong id="netClustering">-</strong>
+        </div>
+      </div>
+      <div class="rank-card">
+        <span>Top PageRank</span>
+        <ol id="pagerankList"></ol>
+      </div>
+      <div class="note" id="networkNote"></div>
+
       <div class="note" id="dataNote">Loading research summary…</div>
     </div>
 
@@ -327,6 +391,7 @@
 
   <script>
     const dataUrl = new URL('data/research_summary.json', window.location.href).href;
+    const networkUrl = new URL('data/network_metrics.json', window.location.href).href;
     const chart = document.getElementById('chart');
     const ctx = chart.getContext('2d');
 
@@ -336,6 +401,12 @@
     const meanDist = document.getElementById('meanDist');
     const contigShare = document.getElementById('contigShare');
     const rtaShare = document.getElementById('rtaShare');
+    const netDensity = document.getElementById('netDensity');
+    const netReciprocity = document.getElementById('netReciprocity');
+    const netAssortativity = document.getElementById('netAssortativity');
+    const netClustering = document.getElementById('netClustering');
+    const pagerankList = document.getElementById('pagerankList');
+    const networkNote = document.getElementById('networkNote');
     const dataNote = document.getElementById('dataNote');
     const explanation = document.getElementById('explanation');
     const summaryNote = document.getElementById('summaryNote');
@@ -369,6 +440,7 @@
     };
 
     let payload = null;
+    let networkPayload = null;
     let activeMethod = 'residual';
 
     function resizeCanvas() {
@@ -458,7 +530,47 @@
         ? `Largest distribution shifts: ${summary.largest_shifts.join(', ')}`
         : '';
 
+      updateNetworkMetrics();
       drawChart();
+    }
+
+    function updateNetworkMetrics() {
+      if (!networkPayload) {
+        netDensity.textContent = '-';
+        netReciprocity.textContent = '-';
+        netAssortativity.textContent = '-';
+        netClustering.textContent = '-';
+        pagerankList.innerHTML = '';
+        networkNote.textContent = 'Network metrics not loaded; run scripts/14_network_metrics.py.';
+        return;
+      }
+
+      const year = yearSelect.value;
+      const entry = networkPayload.by_year?.[year];
+      if (!entry) {
+        netDensity.textContent = '-';
+        netReciprocity.textContent = '-';
+        netAssortativity.textContent = '-';
+        netClustering.textContent = '-';
+        pagerankList.innerHTML = '';
+        networkNote.textContent = `No network metrics for ${year}.`;
+        return;
+      }
+
+      const stats = entry.network_stats || {};
+      netDensity.textContent = formatNumber(stats.density, 4);
+      netReciprocity.textContent = formatNumber(stats.reciprocity, 4);
+      netAssortativity.textContent = formatNumber(stats.assortativity, 4);
+      netClustering.textContent = formatNumber(stats.global_clustering, 4);
+
+      pagerankList.innerHTML = '';
+      (entry.top_by_pagerank || []).slice(0, 5).forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = `${item[0]} (${formatNumber(item[1], 5)})`;
+        pagerankList.appendChild(li);
+      });
+
+      networkNote.textContent = `Edges: ${formatNumber(stats.num_edges, 0)} | Countries: ${formatNumber(stats.num_countries, 0)}.`;
     }
 
     function setActiveMethod(key) {
@@ -471,20 +583,34 @@
 
     async function loadData() {
       try {
-        const response = await fetch(dataUrl, { cache: 'no-store' });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        payload = await response.json();
+        const [summaryResult, networkResult] = await Promise.allSettled([
+          fetch(dataUrl, { cache: 'no-store' }),
+          fetch(networkUrl, { cache: 'no-store' })
+        ]);
 
-        yearSelect.innerHTML = '';
-        payload.meta.years.forEach(year => {
-          const option = document.createElement('option');
-          option.value = year;
-          option.textContent = year;
-          yearSelect.appendChild(option);
-        });
-        yearSelect.value = payload.meta.years[payload.meta.years.length - 1];
+        if (summaryResult.status === 'fulfilled' && summaryResult.value.ok) {
+          payload = await summaryResult.value.json();
+          yearSelect.innerHTML = '';
+          payload.meta.years.forEach(year => {
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = year;
+            yearSelect.appendChild(option);
+          });
+          yearSelect.value = payload.meta.years[payload.meta.years.length - 1];
+          dataNote.textContent = `Source: ${payload.meta.source}. Rows: ${payload.meta.rows}.`;
+        } else {
+          throw new Error('Research summary unavailable.');
+        }
 
-        dataNote.textContent = `Source: ${payload.meta.source}. Rows: ${payload.meta.rows}.`;
+        if (networkResult.status === 'fulfilled' && networkResult.value.ok) {
+          networkPayload = await networkResult.value.json();
+          networkNote.textContent = '';
+        } else {
+          networkPayload = null;
+          networkNote.textContent = 'Network metrics not loaded; run scripts/14_network_metrics.py.';
+        }
+
         updateMetrics();
         resizeCanvas();
       } catch (err) {

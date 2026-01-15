@@ -561,3 +561,4 @@ Full Methodology (Technical Depth)
 - 2026-01-15 03:10:02 -0600: Added dynamic model insight and dyad explanation panels to the gravity explorer with live coefficient interpretation and partial contribution breakdowns.
 - 2026-01-15 03:48:22 -0600: Built research summary pipeline and data-driven Research Lab page, updated navigation, and aligned topology/landing aesthetics with the main palette.
 - 2026-01-15 04:32:11 -0600: Added Trade Sphere, Residual Surface, and Model Lab pages; generated country embeddings for 3D network view; wired new navigation links across pages.
+- 2026-01-15 04:34:30 -0600: Generated network metrics (docs/data/network_metrics.json), updated master report, fixed country embedding schema, expanded validator (7/7 tests), and wired network diagnostics into Research Lab.
