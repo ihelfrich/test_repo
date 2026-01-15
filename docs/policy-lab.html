@@ -362,20 +362,20 @@
 
       <section class="grid">
         <div class="card">
-          <span>Total trade change</span>
-          <strong id="tradeChange">-</strong>
+          <span>Target imports change</span>
+          <strong id="targetImportChange">-</strong>
+        </div>
+        <div class="card">
+          <span>Target exports change</span>
+          <strong id="targetExportChange">-</strong>
+        </div>
+        <div class="card">
+          <span>Bilateral flow change</span>
+          <strong id="bilateralChange">-</strong>
         </div>
         <div class="card">
           <span>Average welfare change</span>
           <strong id="avgWelfare">-</strong>
-        </div>
-        <div class="card">
-          <span>Largest winner</span>
-          <strong id="winner">-</strong>
-        </div>
-        <div class="card">
-          <span>Largest loser</span>
-          <strong id="loser">-</strong>
         </div>
       </section>
 
@@ -412,10 +412,10 @@
     const dataNote = document.getElementById('dataNote');
     const statusPill = document.getElementById('statusPill');
     const summaryText = document.getElementById('summaryText');
-    const tradeChange = document.getElementById('tradeChange');
+    const targetImportChange = document.getElementById('targetImportChange');
+    const targetExportChange = document.getElementById('targetExportChange');
+    const bilateralChange = document.getElementById('bilateralChange');
     const avgWelfare = document.getElementById('avgWelfare');
-    const winner = document.getElementById('winner');
-    const loser = document.getElementById('loser');
     const welfareTable = document.getElementById('welfareTable');
 
     let payload = null;
@@ -473,7 +473,6 @@
     function solveCounterfactual(yearKey, shock, theta) {
       const yearData = payload.by_year[yearKey];
       const flows = yearData.flows_pred;
-      const exportShares = yearData.export_shares;
       const importShares = yearData.import_shares;
       const exports = yearData.exports_pred;
       const imports = yearData.imports_pred;
@@ -482,43 +481,6 @@
       const delta = buildDeltaMatrix(n, shock);
       const phi = delta.map(row => row.map(value => Math.pow(value, -theta)));
 
-      let P = Array(n).fill(1);
-      let Pi = Array(n).fill(1);
-      const maxIter = 200;
-      const tol = 1e-6;
-
-      for (let iter = 0; iter < maxIter; iter++) {
-        const P_new = Array(n).fill(0);
-        const Pi_new = Array(n).fill(0);
-
-        for (let i = 0; i < n; i++) {
-          let sum = 0;
-          for (let j = 0; j < n; j++) {
-            sum += exportShares[i][j] * phi[i][j] * Math.pow(Pi[j], theta - 1);
-          }
-          const safeSum = Math.max(sum, 1e-12);
-          P_new[i] = Math.pow(safeSum, 1 / (1 - theta));
-        }
-
-        for (let j = 0; j < n; j++) {
-          let sum = 0;
-          for (let i = 0; i < n; i++) {
-            sum += importShares[i][j] * phi[i][j] * Math.pow(P_new[i], theta - 1);
-          }
-          const safeSum = Math.max(sum, 1e-12);
-          Pi_new[j] = Math.pow(safeSum, 1 / (1 - theta));
-        }
-
-        let diff = 0;
-        for (let i = 0; i < n; i++) {
-          diff = Math.max(diff, Math.abs(P_new[i] - P[i]), Math.abs(Pi_new[i] - Pi[i]));
-          P[i] = 0.6 * P[i] + 0.4 * P_new[i];
-          Pi[i] = 0.6 * Pi[i] + 0.4 * Pi_new[i];
-        }
-
-        if (diff < tol) break;
-      }
-
       const flows_cf = Array.from({ length: n }, () => Array(n).fill(0));
       const exports_cf = Array(n).fill(0);
       const imports_cf = Array(n).fill(0);
@@ -526,21 +488,30 @@
       for (let i = 0; i < n; i++) {
         for (let j = 0; j < n; j++) {
           const base = flows[i][j];
-          const scale = phi[i][j] * Math.pow(P[i], theta - 1) * Math.pow(Pi[j], theta - 1);
-          const val = base * scale;
+          const val = base * phi[i][j];
           flows_cf[i][j] = val;
           exports_cf[i] += val;
           imports_cf[j] += val;
         }
       }
 
-      const welfare = P.map(value => Math.pow(Math.max(value, 1e-12), -1 / (theta - 1)));
+      const welfare = Array(n).fill(1);
+      for (let j = 0; j < n; j++) {
+        let sum = 0;
+        for (let i = 0; i < n; i++) {
+          sum += importShares[i][j] * phi[i][j];
+        }
+        const priceIndex = Math.pow(Math.max(sum, 1e-12), 1 / (1 - theta));
+        welfare[j] = 1 / priceIndex;
+      }
 
       return {
         exports,
         imports,
         exports_cf,
         imports_cf,
+        flows,
+        flows_cf,
         total_trade: exports.reduce((a, b) => a + b, 0),
         total_trade_cf: exports_cf.reduce((a, b) => a + b, 0),
         welfare
@@ -551,7 +522,6 @@
       const countries = payload.meta.countries;
       const names = payload.meta.country_names || {};
 
-      const tradeDelta = (results.total_trade_cf / results.total_trade - 1) * 100;
       const welfareChanges = results.welfare.map(value => (value - 1) * 100);
       const avgW = welfareChanges.reduce((a, b) => a + b, 0) / welfareChanges.length;
 
@@ -563,17 +533,35 @@
         importDelta: (results.imports_cf[idx] / Math.max(results.imports[idx], 1e-9) - 1) * 100
       }));
 
-      entries.sort((a, b) => b.welfare - a.welfare);
-      const best = entries[0];
-      const worst = entries[entries.length - 1];
+      const targetIso = targetSelect.value;
+      const partnerIso = partnerSelect.value;
+      const targetIdx = countryIndex[targetIso];
+      const partnerIdx = countryIndex[partnerIso];
 
-      tradeChange.textContent = formatPct(tradeDelta);
+      let targetImportDelta = '-';
+      let targetExportDelta = '-';
+      let bilateralDelta = '-';
+
+      if (targetIdx !== undefined) {
+        targetImportDelta = formatPct(entries[targetIdx].importDelta);
+        targetExportDelta = formatPct(entries[targetIdx].exportDelta);
+      }
+
+      if (targetIdx !== undefined && partnerIdx !== undefined) {
+        const baseFlow = results.flows[partnerIdx][targetIdx] || 0;
+        const cfFlow = results.flows_cf[partnerIdx][targetIdx] || 0;
+        const flowDelta = (cfFlow / Math.max(baseFlow, 1e-9) - 1) * 100;
+        bilateralDelta = formatPct(flowDelta);
+      }
+
+      targetImportChange.textContent = targetImportDelta;
+      targetExportChange.textContent = targetExportDelta;
+      bilateralChange.textContent = bilateralDelta;
       avgWelfare.textContent = formatPct(avgW);
-      winner.textContent = `${best.iso} ${formatPct(best.welfare)}`;
-      loser.textContent = `${worst.iso} ${formatPct(worst.welfare)}`;
 
+      const entriesSorted = entries.slice().sort((a, b) => b.welfare - a.welfare);
       welfareTable.innerHTML = '';
-      entries.slice(0, 10).forEach(entry => {
+      entriesSorted.slice(0, 10).forEach(entry => {
         const row = document.createElement('tr');
         row.innerHTML = `
           <td>${entry.iso}</td>
@@ -584,7 +572,7 @@
         welfareTable.appendChild(row);
       });
 
-      summaryText.textContent = `Theta ${theta.toFixed(1)} with ${entries.length} countries in ${yearSelect.value}. Results are relative to baseline predicted trade.`;
+      summaryText.textContent = `Theta ${theta.toFixed(1)} · ${yearSelect.value}. Partial-equilibrium response; full GE solver is queued for the next release.`;
     }
 
     function runSimulation() {

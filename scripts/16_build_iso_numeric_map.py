@@ -19,8 +19,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--input",
-        default="/Users/ian/trade_data_warehouse/baci/country_codes.parquet",
-        help="Input parquet with BACI country codes.",
+        default="/Users/ian/trade_data_warehouse/gravity/gravity_countries.parquet",
+        help="Input parquet with ISO numeric codes (gravity_countries preferred).",
     )
     parser.add_argument(
         "--out",
@@ -37,19 +37,32 @@ def main() -> None:
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
     df = pd.read_parquet(input_path)
-    df = df.dropna(subset=["country_code", "country_iso3"])
 
     mapping = {}
-    for row in df.itertuples(index=False):
-        try:
-            code = int(row.country_code)
-        except (TypeError, ValueError):
-            continue
-        mapping[code] = {
-            "iso3": str(row.country_iso3),
-            "iso2": str(row.country_iso2),
-            "name": str(row.country_name),
-        }
+    if "iso3num" in df.columns and "iso3" in df.columns:
+        df = df.dropna(subset=["iso3num", "iso3"])
+        for row in df.itertuples(index=False):
+            try:
+                code = int(row.iso3num)
+            except (TypeError, ValueError):
+                continue
+            mapping[code] = {
+                "iso3": str(row.iso3),
+                "iso2": str(getattr(row, "iso2", "")),
+                "name": str(getattr(row, "country", row.iso3)),
+            }
+    else:
+        df = df.dropna(subset=["country_code", "country_iso3"])
+        for row in df.itertuples(index=False):
+            try:
+                code = int(row.country_code)
+            except (TypeError, ValueError):
+                continue
+            mapping[code] = {
+                "iso3": str(row.country_iso3),
+                "iso2": str(row.country_iso2),
+                "name": str(row.country_name),
+            }
 
     payload = {
         "meta": {
