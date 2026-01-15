@@ -552,3 +552,4 @@ Full Methodology (Technical Depth)
 - Modern web design example
 🤖 ChatGPT (2026-01-14 18:34:06 -0600): Hardened the interactive explorer for reliability: switched to direct CDN module imports (no importmap dependency), added a status pill, fallback sample dataset, and explicit live-vs-fallback messaging so the UI renders even if the live JSON fails. Capped device pixel ratio for smoother rendering. Added /venv to .gitignore.
 - 2026-01-14 19:05:53 -0600: Sanitized references to external collaborators and career-focused language across docs/scripts; added Arrow IPC output to visualization prep; updated Arrow loader demo to read IPC file; full-data extraction script now tolerates missing PyYAML.
+- 2026-01-14 23:25:08 -0600: Restored importmap in docs/index.html so OrbitControls resolves the 'three' bare specifier; this should fix the empty year dropdown caused by module load failure.

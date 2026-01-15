@@ -425,9 +425,18 @@
     <div>Curated by Dr. Ian Helfrich.</div>
   </footer>
 
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+      }
+    }
+  </script>
+
   <script type="module">
-    import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js";
-    import { OrbitControls } from "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/controls/OrbitControls.js";
+    import * as THREE from "three";
+    import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
     const dataUrl = new URL("data/baci_gravity_viz.json", window.location.href).href;
     const container = document.getElementById("viz");
