@@ -10,6 +10,55 @@ import pyarrow.ipc as ipc
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 
+MODEL_SPECS = [
+    {
+        "key": "avw_ppml",
+        "label": "Anderson-van Wincoop (2003) PPML with exporter/importer FE",
+        "kind": "glm",
+        "link": "log",
+        "formula": (
+            "trade_value_usd_millions ~ ln_dist + contig + comlang_off + comcol "
+            "+ ln_gdp_o + ln_gdp_d + ln_pop_o + ln_pop_d + rta_coverage "
+            "+ C(year) + C(iso_o) + C(iso_d)"
+        ),
+        "notes": "Baseline structural gravity with multilateral resistance (exporter/importer FE).",
+    },
+    {
+        "key": "hm_ppml",
+        "label": "Head-Mayer (2014) PPML with exporter-year & importer-year FE",
+        "kind": "glm",
+        "link": "log",
+        "formula": (
+            "trade_value_usd_millions ~ ln_dist + contig + comlang_off + comcol "
+            "+ rta_coverage + C(iso_o):C(year) + C(iso_d):C(year)"
+        ),
+        "notes": "Time-varying multilateral resistance via exporter-year/importer-year FE.",
+    },
+    {
+        "key": "year_fe_ppml",
+        "label": "Reduced-form PPML with year FE only",
+        "kind": "glm",
+        "link": "log",
+        "formula": (
+            "trade_value_usd_millions ~ ln_dist + contig + comlang_off + comcol "
+            "+ ln_gdp_o + ln_gdp_d + ln_pop_o + ln_pop_d + rta_coverage + C(year)"
+        ),
+        "notes": "Parsimonious specification for quick comparisons (no country FE).",
+    },
+    {
+        "key": "avw_ols",
+        "label": "AvW OLS on log1p trade with exporter/importer FE",
+        "kind": "ols",
+        "link": "log1p",
+        "formula": (
+            "log_trade_value ~ ln_dist + contig + comlang_off + comcol "
+            "+ ln_gdp_o + ln_gdp_d + ln_pop_o + ln_pop_d + rta_coverage "
+            "+ C(year) + C(iso_o) + C(iso_d)"
+        ),
+        "notes": "Log-linear benchmark (OLS on log1p trade).",
+    },
+]
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -29,6 +78,17 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--end-year", type=int, default=2022)
     parser.add_argument("--top-n", type=int, default=30)
     parser.add_argument(
+        "--models",
+        default="all",
+        help="Comma-separated model keys to include (default: all).",
+    )
+    parser.add_argument(
+        "--max-iter",
+        type=int,
+        default=120,
+        help="Maximum iterations for GLM estimation.",
+    )
+    parser.add_argument(
         "--out-parquet",
         default="docs/data/baci_gravity_viz.parquet",
         help="Output parquet path (columnar).",
@@ -44,6 +104,42 @@ def parse_args() -> argparse.Namespace:
         help="Output Arrow IPC path for browser-native loading.",
     )
     return parser.parse_args()
+
+
+def _safe_float(value: float) -> float:
+    try:
+        if value is None or not np.isfinite(value):
+            return 0.0
+        return float(value)
+    except Exception:
+        return 0.0
+
+
+def _predict_linear(result, df: pd.DataFrame) -> np.ndarray:
+    try:
+        return result.predict(df, which="linear")
+    except TypeError:
+        try:
+            return result.predict(df, linear=True)
+        except TypeError:
+            return result.predict(df)
+
+
+def _fit_model(spec: dict, df: pd.DataFrame, max_iter: int) -> tuple:
+    if spec["kind"] == "ols":
+        model = smf.ols(formula=spec["formula"], data=df)
+        result = model.fit()
+        base_eta = result.predict(df)
+        trade_pred = np.expm1(base_eta)
+        trade_pred = np.where(np.isfinite(trade_pred), trade_pred, 0.0)
+        trade_pred = np.clip(trade_pred, 0, None)
+        return result, trade_pred, base_eta
+
+    model = smf.glm(formula=spec["formula"], data=df, family=sm.families.Poisson())
+    result = model.fit(maxiter=max_iter, disp=False)
+    trade_pred = result.predict(df)
+    base_eta = _predict_linear(result, df)
+    return result, trade_pred, base_eta
 
 
 def main() -> None:
@@ -122,27 +218,49 @@ def main() -> None:
     df["ln_pop_o"] = np.log(df["pop_o"])
     df["ln_pop_d"] = np.log(df["pop_d"])
     df["ln_gdp_prod"] = df["ln_gdp_o"] + df["ln_gdp_d"]
+    df["log_trade_value"] = np.log1p(df["trade_value_usd_millions"])
 
     for col in ["contig", "comlang_off", "comcol", "rta_coverage"]:
         if col in df.columns:
             df[col] = df[col].fillna(0)
 
-    # Anderson-van Wincoop structure with exporter/importer FE (multilateral resistance).
-    formula = (
-        "trade_value_usd_millions ~ ln_dist + contig + comlang_off + comcol "
-        "+ ln_gdp_o + ln_gdp_d + ln_pop_o + ln_pop_d + rta_coverage "
-        "+ C(year) + C(iso_o) + C(iso_d)"
-    )
+    model_results = {}
+    failed_models = []
+    selected_models = {spec["key"] for spec in MODEL_SPECS}
+    if args.models != "all":
+        selected_models = {key.strip() for key in args.models.split(",") if key.strip()}
 
-    model = smf.glm(formula=formula, data=df, family=sm.families.Poisson())
-    result = model.fit()
+    for spec in MODEL_SPECS:
+        if spec["key"] not in selected_models:
+            continue
+        try:
+            result, trade_pred, base_eta = _fit_model(spec, df, args.max_iter)
+            model_results[spec["key"]] = {
+                "result": result,
+                "trade_pred": trade_pred,
+                "base_eta": base_eta,
+                "label": spec["label"],
+                "notes": spec["notes"],
+                "link": spec["link"],
+            }
+        except Exception as exc:
+            failed_models.append((spec["key"], str(exc)))
 
-    df["trade_pred"] = result.predict(df)
-    try:
-        df["base_eta"] = result.predict(df, which="linear")
-    except TypeError:
-        df["base_eta"] = result.predict(df, linear=True)
+    if not model_results:
+        raise RuntimeError(f"All model fits failed: {failed_models}")
+
+    default_model_key = "avw_ppml"
+    if default_model_key not in model_results:
+        default_model_key = list(model_results.keys())[0]
+
     df["log_trade"] = np.log1p(df["trade_value_usd_millions"])
+
+    for key, info in model_results.items():
+        df[f"trade_pred_{key}"] = info["trade_pred"]
+        df[f"base_eta_{key}"] = info["base_eta"]
+
+    df["trade_pred"] = df[f"trade_pred_{default_model_key}"]
+    df["base_eta"] = df[f"base_eta_{default_model_key}"]
     df["log_trade_pred"] = np.log1p(df["trade_pred"])
     df["log_trade_gap"] = df["log_trade"] - df["log_trade_pred"]
 
@@ -165,6 +283,9 @@ def main() -> None:
         "comcol",
         "rta_coverage",
     ]
+    for key in model_results:
+        keep_cols.extend([f"trade_pred_{key}", f"base_eta_{key}"])
+
     df_out = df[keep_cols].copy()
 
     df_out.to_parquet(out_parquet, index=False)
@@ -172,27 +293,28 @@ def main() -> None:
     with ipc.new_file(out_arrow, table.schema) as writer:
         writer.write(table)
 
-    coef_terms = [
-        "ln_dist",
-        "contig",
-        "comlang_off",
-        "comcol",
-        "rta_coverage",
-        "ln_gdp_o",
-        "ln_gdp_d",
-        "ln_pop_o",
-        "ln_pop_d",
-    ]
-    coefficients = {term: float(result.params.get(term, 0.0)) for term in coef_terms}
+    coef_terms = ["ln_dist", "contig", "comlang_off", "comcol", "rta_coverage"]
+    model_meta = {}
+    for key, info in model_results.items():
+        result = info["result"]
+        coefficients = {term: _safe_float(result.params.get(term, 0.0)) for term in coef_terms}
+        model_meta[key] = {
+            "label": info["label"],
+            "notes": info["notes"],
+            "link": info["link"],
+            "coefficients": coefficients,
+        }
 
     payload = {
         "meta": {
             "source": "BACI bilateral totals + CEPII gravity v202211",
             "years": sorted(df_out["year"].unique().tolist()),
             "top_n": args.top_n,
-            "model": "Anderson-van Wincoop (2003) gravity with exporter/importer FE (PPML)",
-            "notes": "Predictions from Poisson GLM with fixed effects; log variables are log(1+x).",
-            "coefficients": coefficients,
+            "model": model_meta[default_model_key]["label"],
+            "default_model": default_model_key,
+            "models": model_meta,
+            "notes": "Predictions from multiple gravity specifications; log variables are log(1+x).",
+            "coefficients": model_meta[default_model_key]["coefficients"],
         },
         "rows": df_out.to_dict(orient="records"),
     }

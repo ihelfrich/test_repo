@@ -555,3 +555,4 @@ Full Methodology (Technical Depth)
 - 2026-01-14 23:25:08 -0600: Restored importmap in docs/index.html so OrbitControls resolves the 'three' bare specifier; this should fix the empty year dropdown caused by module load failure.
 - 2026-01-14 23:32:43 -0600: Enhanced the 3D explorer UI for clarity: darker high-contrast viz background, stronger grid/axes, variable point sizes by trade volume, color-by control, top-N filter, and point size scaling. Added axis legend and dynamic legend labels.
 - 2026-01-15 00:26:59 -0600: Expanded visualization dataset to 2005–2022 with top-30 exporters/importers (13,778 rows). Updated prepare script defaults and regenerated JSON/Parquet/Arrow payloads.
+- 2026-01-15 01:09:12 -0600: Added multi-model gravity support in the data pipeline and UI (AvW PPML, year-FE PPML, AvW OLS). Added model selector and model metadata, regenerated visualization payload with per-model predictions.

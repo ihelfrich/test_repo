@@ -114,6 +114,17 @@
       border: 1px solid rgba(19, 34, 56, 0.06);
     }
 
+    .model-note {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(47, 156, 149, 0.08);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+      border: 1px solid rgba(19, 34, 56, 0.06);
+    }
+
     .control-group {
       margin-top: 16px;
     }
@@ -345,9 +356,9 @@
   <header>
     <h1 class="title">Counterfactual Gravity Shock Explorer</h1>
     <p class="subtitle">
-      Explore bilateral trade responses under Anderson–van Wincoop (2003) gravity with
-      multilateral resistance captured via exporter/importer fixed effects. Use the sliders to
-      scale estimated trade‑cost elasticities and compare predicted trade against baseline.
+      Explore bilateral trade responses across multiple gravity specifications. Use the sliders
+      to scale estimated trade‑cost elasticities and compare predicted trade against baseline
+      under alternative modeling assumptions.
     </p>
     <div class="status" id="status">Initializing data pipeline…</div>
   </header>
@@ -359,6 +370,12 @@
         X_ij = exp(α_i + δ_j − θ·ln(dist_ij) + β′Z_ij)<br />
         Z_ij = {contig, comlang, comcol, rta} + {GDP, POP}
       </div>
+
+      <div class="control-group">
+        <label for="modelSelect">Model <span id="modelValue"></span></label>
+        <select id="modelSelect"></select>
+      </div>
+      <div class="model-note" id="modelNote"></div>
 
       <div class="control-group">
         <label for="yearSelect">Year <span id="yearValue"></span></label>
@@ -487,6 +504,9 @@
     const legendMin = document.getElementById("legendMin");
     const legendMax = document.getElementById("legendMax");
 
+    const modelSelect = document.getElementById("modelSelect");
+    const modelValue = document.getElementById("modelValue");
+    const modelNote = document.getElementById("modelNote");
     const yearSelect = document.getElementById("yearSelect");
     const yearValue = document.getElementById("yearValue");
     const metricSelect = document.getElementById("metricSelect");
@@ -516,18 +536,29 @@
         years: [2021],
         top_n: 3,
         model: "Anderson-van Wincoop (2003) gravity with exporter/importer FE (PPML)",
+        default_model: "avw_ppml",
         notes: "Fallback only: live payload not available.",
         warning: "Live data unavailable; showing fallback sample.",
+        models: {
+          avw_ppml: {
+            label: "Anderson-van Wincoop (2003) PPML with exporter/importer FE",
+            notes: "Fallback sample; coefficients are illustrative only.",
+            link: "log",
+            coefficients: {
+              ln_dist: -0.8,
+              contig: 0.4,
+              comlang_off: 0.3,
+              comcol: 0.2,
+              rta_coverage: 0.15,
+            },
+          },
+        },
         coefficients: {
           ln_dist: -0.8,
           contig: 0.4,
           comlang_off: 0.3,
           comcol: 0.2,
           rta_coverage: 0.15,
-          ln_gdp_o: 0.9,
-          ln_gdp_d: 0.9,
-          ln_pop_o: 0.1,
-          ln_pop_d: 0.1,
         },
       },
       rows: [
@@ -537,7 +568,9 @@
           iso_d: "CHN",
           trade_value_usd_millions: 50000,
           trade_pred: 42000,
+          trade_pred_avw_ppml: 42000,
           base_eta: Math.log(42000),
+          base_eta_avw_ppml: Math.log(42000),
           log_trade: Math.log(1 + 50000),
           log_trade_pred: Math.log(1 + 42000),
           log_trade_gap: Math.log(1 + 50000) - Math.log(1 + 42000),
@@ -556,7 +589,9 @@
           iso_d: "FRA",
           trade_value_usd_millions: 32000,
           trade_pred: 35000,
+          trade_pred_avw_ppml: 35000,
           base_eta: Math.log(35000),
+          base_eta_avw_ppml: Math.log(35000),
           log_trade: Math.log(1 + 32000),
           log_trade_pred: Math.log(1 + 35000),
           log_trade_gap: Math.log(1 + 32000) - Math.log(1 + 35000),
@@ -575,7 +610,9 @@
           iso_d: "ARG",
           trade_value_usd_millions: 8500,
           trade_pred: 9100,
+          trade_pred_avw_ppml: 9100,
           base_eta: Math.log(9100),
+          base_eta_avw_ppml: Math.log(9100),
           log_trade: Math.log(1 + 8500),
           log_trade_pred: Math.log(1 + 9100),
           log_trade_gap: Math.log(1 + 8500) - Math.log(1 + 9100),
@@ -619,6 +656,8 @@
 
     let pointsGroup = null;
     let pointMeta = [];
+    let modelMeta = {};
+    let modelKeys = [];
     const raycaster = new THREE.Raycaster();
     raycaster.params.Points.threshold = 5.0;
     const pointer = new THREE.Vector2();
@@ -633,6 +672,7 @@
       },
       metric: "actual",
       colorMetric: "delta_pred",
+      modelKey: null,
       year: null,
       topN: 200,
       sizeScale: 1.2,
@@ -640,12 +680,25 @@
 
     const formatMultiplier = (value) => `${Number(value).toFixed(2)}×`;
 
+    const getActiveModel = () => {
+      if (state.modelKey && modelMeta[state.modelKey]) {
+        return modelMeta[state.modelKey];
+      }
+      if (modelKeys.length && modelMeta[modelKeys[0]]) {
+        return modelMeta[modelKeys[0]];
+      }
+      return { label: "Gravity model", notes: "", coefficients: {}, link: "log" };
+    };
+
     const updateLabels = () => {
+      const activeModel = getActiveModel();
       distLabel.textContent = formatMultiplier(state.shocks.dist);
       contigLabel.textContent = formatMultiplier(state.shocks.contig);
       langLabel.textContent = formatMultiplier(state.shocks.lang);
       colLabel.textContent = formatMultiplier(state.shocks.col);
       rtaLabel.textContent = formatMultiplier(state.shocks.rta);
+      modelValue.textContent = activeModel.label || "";
+      modelNote.textContent = activeModel.notes || "";
       yearValue.textContent = state.year ? state.year : "";
       metricValue.textContent = metricSelect.options[metricSelect.selectedIndex].text;
       colorValue.textContent = colorSelect.options[colorSelect.selectedIndex].text;
@@ -792,9 +845,11 @@
       const warning = metaInfo.warning
         ? `<div style="color:#a56a1a;"><strong>Notice:</strong> ${metaInfo.warning}</div>`
         : "";
+      const activeModel = getActiveModel();
       meta.innerHTML = `
         ${warning}
         <div><strong>Dataset:</strong> ${metaInfo.source}</div>
+        <div><strong>Model:</strong> ${activeModel.label || metaInfo.model}</div>
         <div><strong>Years:</strong> ${metaInfo.years.join(", ")}</div>
         <div><strong>Top N (dataset):</strong> ${metaInfo.top_n}</div>
         <div><strong>Top N (filter):</strong> ${state.topN}</div>
@@ -839,10 +894,37 @@
         console.log('[INIT] Data fetched successfully:', payload.rows.length, 'rows');
         const rows = payload.rows;
         const metaInfo = payload.meta;
-        const coeffs = metaInfo.coefficients || {};
-        console.log('[INIT] Coefficients:', coeffs);
+        const models = metaInfo.models && Object.keys(metaInfo.models).length
+          ? metaInfo.models
+          : {
+              default: {
+                label: metaInfo.model || "Gravity model",
+                notes: metaInfo.notes || "",
+                link: "log",
+                coefficients: metaInfo.coefficients || {},
+              },
+            };
+        modelMeta = models;
+        modelKeys = Object.keys(modelMeta);
+        modelSelect.innerHTML = "";
+        modelKeys.forEach((key) => {
+          const option = document.createElement("option");
+          option.value = key;
+          option.textContent = modelMeta[key].label || key;
+          modelSelect.appendChild(option);
+        });
+        const defaultModel = metaInfo.default_model && modelMeta[metaInfo.default_model]
+          ? metaInfo.default_model
+          : modelKeys[0];
+        state.modelKey = defaultModel;
+        modelSelect.value = state.modelKey;
 
-        const getCoeff = (key) => (key in coeffs ? coeffs[key] : 0);
+        console.log('[INIT] Available models:', modelKeys);
+
+        const getCoeff = (key) => {
+          const coeffs = getActiveModel().coefficients || {};
+          return key in coeffs ? coeffs[key] : 0;
+        };
 
         const rowsByYear = rows.reduce((acc, row) => {
           if (!acc[row.year]) acc[row.year] = [];
@@ -893,6 +975,15 @@
             .slice(0, state.topN);
 
           const computed = topRows.map((row) => {
+            const modelKey = state.modelKey;
+            const tradePred =
+              row[`trade_pred_${modelKey}`] !== undefined
+                ? row[`trade_pred_${modelKey}`]
+                : row.trade_pred;
+            const baseEta =
+              row[`base_eta_${modelKey}`] !== undefined
+                ? row[`base_eta_${modelKey}`]
+                : row.base_eta;
             const deltaEta =
               (state.shocks.dist - 1) * getCoeff("ln_dist") * row.ln_dist +
               (state.shocks.contig - 1) * getCoeff("contig") * row.contig +
@@ -900,19 +991,24 @@
               (state.shocks.col - 1) * getCoeff("comcol") * row.comcol +
               (state.shocks.rta - 1) * getCoeff("rta_coverage") * row.rta_coverage;
 
-            const etaCf = row.base_eta + deltaEta;
-            const tradeCf = Math.exp(etaCf);
-            const deltaPred = tradeCf - row.trade_pred;
-            const pctChange = row.trade_pred > 0 ? deltaPred / row.trade_pred : 0;
+            const etaCf = baseEta + deltaEta;
+            const link = getActiveModel().link || "log";
+            let tradeCf = link === "log1p" ? Math.expm1(etaCf) : Math.exp(etaCf);
+            if (!Number.isFinite(tradeCf)) tradeCf = 0;
+            tradeCf = Math.max(0, tradeCf);
+            const deltaPred = tradeCf - tradePred;
+            const pctChange = tradePred > 0 ? deltaPred / tradePred : 0;
 
             return {
               ...row,
+              trade_pred: tradePred,
+              base_eta: baseEta,
               trade_cf: tradeCf,
               delta_pred: deltaPred,
-              residual: row.trade_value_usd_millions - row.trade_pred,
+              residual: row.trade_value_usd_millions - tradePred,
               pct_change: pctChange,
               z_actual: log1p(row.trade_value_usd_millions),
-              z_pred: log1p(row.trade_pred),
+              z_pred: log1p(tradePred),
               z_cf: log1p(tradeCf),
               z_pct: pctChange,
             };
@@ -944,6 +1040,7 @@
         };
 
         const updateState = () => {
+          state.modelKey = modelSelect.value;
           state.year = yearSelect.value;
           state.metric = metricSelect.value;
           state.colorMetric = colorSelect.value;
@@ -958,6 +1055,7 @@
           applyScenario();
         };
 
+        modelSelect.addEventListener("change", updateState);
         yearSelect.addEventListener("change", updateState);
         metricSelect.addEventListener("change", updateState);
         colorSelect.addEventListener("change", updateState);
