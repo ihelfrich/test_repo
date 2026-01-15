@@ -125,6 +125,50 @@
       border: 1px solid rgba(19, 34, 56, 0.06);
     }
 
+    .insight {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 12px;
+      background: #fbf7ee;
+      border: 1px solid rgba(19, 34, 56, 0.08);
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .insight h3 {
+      margin: 0 0 8px;
+      font-size: 12px;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--ink);
+    }
+
+    .coef-table {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 6px 10px;
+      align-items: baseline;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+    }
+
+    .coef-table span {
+      color: var(--ink);
+    }
+
+    .coef-table .muted {
+      color: var(--muted);
+      font-family: "Sora", sans-serif;
+      font-size: 11px;
+    }
+
+    .dyad-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
     .control-group {
       margin-top: 16px;
     }
@@ -376,6 +420,10 @@
         <select id="modelSelect"></select>
       </div>
       <div class="model-note" id="modelNote"></div>
+      <div class="insight">
+        <h3>Model Insight</h3>
+        <div id="modelSummary">Loading model diagnostics…</div>
+      </div>
 
       <div class="control-group">
         <label for="yearSelect">Year <span id="yearValue"></span></label>
@@ -453,6 +501,11 @@
         <div><span>Y</span> Log GDP product (ln gdp_o + ln gdp_d)</div>
         <div><span>Z</span> Selected metric</div>
       </div>
+
+      <div class="insight">
+        <h3>Dyad Insight</h3>
+        <div id="dyadSummary">Hover a point to inspect a dyad.</div>
+      </div>
     </div>
 
     <div class="panel">
@@ -507,6 +560,8 @@
     const modelSelect = document.getElementById("modelSelect");
     const modelValue = document.getElementById("modelValue");
     const modelNote = document.getElementById("modelNote");
+    const modelSummary = document.getElementById("modelSummary");
+    const dyadSummary = document.getElementById("dyadSummary");
     const yearSelect = document.getElementById("yearSelect");
     const yearValue = document.getElementById("yearValue");
     const metricSelect = document.getElementById("metricSelect");
@@ -658,6 +713,7 @@
     let pointMeta = [];
     let modelMeta = {};
     let modelKeys = [];
+    let lastDyad = null;
     const raycaster = new THREE.Raycaster();
     raycaster.params.Points.threshold = 5.0;
     const pointer = new THREE.Vector2();
@@ -679,6 +735,8 @@
     };
 
     const formatMultiplier = (value) => `${Number(value).toFixed(2)}×`;
+    const formatSigned = (value) => `${value >= 0 ? "+" : ""}${value.toFixed(3)}`;
+    const formatPercent = (value) => `${value >= 0 ? "+" : ""}${value.toFixed(1)}%`;
 
     const getActiveModel = () => {
       if (state.modelKey && modelMeta[state.modelKey]) {
@@ -688,6 +746,72 @@
         return modelMeta[modelKeys[0]];
       }
       return { label: "Gravity model", notes: "", coefficients: {}, link: "log" };
+    };
+
+    const buildModelSummary = () => {
+      const activeModel = getActiveModel();
+      const coeffs = activeModel.coefficients || {};
+      const rows = [
+        { label: "Distance (ln dist)", key: "ln_dist", type: "elasticity" },
+        { label: "Contiguity", key: "contig", type: "binary" },
+        { label: "Common language", key: "comlang_off", type: "binary" },
+        { label: "Colonial link", key: "comcol", type: "binary" },
+        { label: "RTA coverage", key: "rta_coverage", type: "binary" },
+      ];
+      const interpretation =
+        activeModel.link === "log1p"
+          ? "OLS log1p: exp(beta)-1 ≈ % change (approx.)"
+          : "PPML log-link: exp(beta)-1 ≈ % change";
+
+      modelSummary.innerHTML = `
+        <div class="coef-table">
+          <span class="muted">Term</span>
+          <span class="muted">β</span>
+          <span class="muted">Effect</span>
+          ${rows
+            .map((row) => {
+              const beta = Number(coeffs[row.key] || 0);
+              const effect =
+                row.type === "binary"
+                  ? formatPercent((Math.exp(beta) - 1) * 100)
+                  : formatSigned(beta);
+              return `
+                <span>${row.label}</span>
+                <span>${formatSigned(beta)}</span>
+                <span>${effect}</span>
+              `;
+            })
+            .join("")}
+        </div>
+        <div class="muted" style="margin-top:8px;">${interpretation}</div>
+      `;
+    };
+
+    const buildDyadSummary = (row) => {
+      if (!row) {
+        dyadSummary.textContent = "Hover a point to inspect a dyad.";
+        return;
+      }
+      const activeModel = getActiveModel();
+      const coeffs = activeModel.coefficients || {};
+      const partials = [
+        { label: "Distance", value: (coeffs.ln_dist || 0) * row.ln_dist },
+        { label: "Contiguity", value: (coeffs.contig || 0) * row.contig },
+        { label: "Language", value: (coeffs.comlang_off || 0) * row.comlang_off },
+        { label: "Colonial", value: (coeffs.comcol || 0) * row.comcol },
+        { label: "RTA", value: (coeffs.rta_coverage || 0) * row.rta_coverage },
+      ];
+      dyadSummary.innerHTML = `
+        <div class="dyad-line"><span>${row.iso_o} → ${row.iso_d}</span><span>${row.year}</span></div>
+        <div class="dyad-line"><span>Predicted</span><span>${formatNumber(row.trade_pred)}</span></div>
+        <div class="dyad-line"><span>Counterfactual</span><span>${formatNumber(row.trade_cf)}</span></div>
+        <div class="dyad-line"><span>Δ (model)</span><span>${formatNumber(row.delta_pred)}</span></div>
+        <div class="dyad-line"><span>Residual</span><span>${formatNumber(row.residual)}</span></div>
+        <div style="margin-top:8px; font-weight:600; color: var(--ink);">Partial contributions (excl. FE)</div>
+        ${partials
+          .map((item) => `<div class="dyad-line"><span>${item.label}</span><span>${formatSigned(item.value)}</span></div>`)
+          .join("")}
+      `;
     };
 
     const updateLabels = () => {
@@ -714,6 +838,10 @@
       } else {
         legendMin.textContent = "Loss";
         legendMax.textContent = "Gain";
+      }
+      buildModelSummary();
+      if (lastDyad) {
+        buildDyadSummary(lastDyad);
       }
     };
 
@@ -926,6 +1054,8 @@
           return key in coeffs ? coeffs[key] : 0;
         };
 
+        buildModelSummary();
+
         const rowsByYear = rows.reduce((acc, row) => {
           if (!acc[row.year]) acc[row.year] = [];
           acc[row.year].push(row);
@@ -1080,6 +1210,7 @@
             const idxAttr = hit.object.geometry.getAttribute("rowIndex");
             const rowIndex = Math.round(idxAttr.getX(hit.index));
             const row = pointMeta[rowIndex];
+            lastDyad = row;
             tooltip.style.opacity = 1;
             tooltip.style.left = `${event.clientX - rect.left + 12}px`;
             tooltip.style.top = `${event.clientY - rect.top + 12}px`;
@@ -1092,6 +1223,7 @@
               <div>Δ %: ${(row.pct_change * 100).toFixed(2)}%</div>
               <div>ln(dist): ${formatNumber(row.ln_dist)}</div>
             `;
+            buildDyadSummary(row);
           } else {
             tooltip.style.opacity = 0;
           }
