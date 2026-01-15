@@ -556,3 +556,4 @@ Full Methodology (Technical Depth)
 - 2026-01-14 23:32:43 -0600: Enhanced the 3D explorer UI for clarity: darker high-contrast viz background, stronger grid/axes, variable point sizes by trade volume, color-by control, top-N filter, and point size scaling. Added axis legend and dynamic legend labels.
 - 2026-01-15 00:26:59 -0600: Expanded visualization dataset to 2005–2022 with top-30 exporters/importers (13,778 rows). Updated prepare script defaults and regenerated JSON/Parquet/Arrow payloads.
 - 2026-01-15 01:09:12 -0600: Added multi-model gravity support in the data pipeline and UI (AvW PPML, year-FE PPML, AvW OLS). Added model selector and model metadata, regenerated visualization payload with per-model predictions.
+- 2026-01-15 01:15:44 -0600: Regenerated visualization payload with all four models (including Head-Mayer exporter/importer-year FE) using top-20 exporters/importers (5,848 rows) to keep runtimes manageable.
