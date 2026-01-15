@@ -620,7 +620,7 @@
     let pointsGroup = null;
     let pointMeta = [];
     const raycaster = new THREE.Raycaster();
-    raycaster.params.Points.threshold = 2.2;
+    raycaster.params.Points.threshold = 5.0;
     const pointer = new THREE.Vector2();
 
     const state = {
@@ -733,6 +733,7 @@
         geometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(bucket.positions), 3));
         geometry.setAttribute("color", new THREE.BufferAttribute(new Float32Array(bucket.colors), 3));
         geometry.setAttribute("rowIndex", new THREE.BufferAttribute(new Float32Array(bucket.rowIndex), 1));
+        geometry.computeBoundingSphere();
 
         const material = new THREE.PointsMaterial({
           size: buckets[idx].size * sizeScale,
@@ -849,7 +850,12 @@
           return acc;
         }, {});
 
-        const years = metaInfo.years;
+        const years = Array.isArray(metaInfo.years)
+          ? metaInfo.years
+          : [...new Set(rows.map((row) => row.year))].sort((a, b) => a - b);
+        if (!years.length) {
+          throw new Error("No years available in data payload.");
+        }
         years.forEach((year) => {
           const option = document.createElement("option");
           option.value = year;
@@ -961,11 +967,11 @@
 
         console.log('[INIT] Calling updateState for first render...');
         updateState();
-        console.log('[INIT] First render complete, points created:', !!points);
+        console.log('[INIT] First render complete, points created:', !!pointsGroup);
 
-        container.addEventListener("mousemove", (event) => {
-          if (!points) return; // Guard against null points
-          const rect = container.getBoundingClientRect();
+        renderer.domElement.addEventListener("mousemove", (event) => {
+          if (!pointsGroup) return;
+          const rect = renderer.domElement.getBoundingClientRect();
           pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
           pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
           raycaster.setFromCamera(pointer, camera);
@@ -977,8 +983,8 @@
             const rowIndex = Math.round(idxAttr.getX(hit.index));
             const row = pointMeta[rowIndex];
             tooltip.style.opacity = 1;
-            tooltip.style.left = `${event.offsetX + 12}px`;
-            tooltip.style.top = `${event.offsetY + 12}px`;
+            tooltip.style.left = `${event.clientX - rect.left + 12}px`;
+            tooltip.style.top = `${event.clientY - rect.top + 12}px`;
             tooltip.innerHTML = `
               <div><strong>${row.iso_o} → ${row.iso_d}</strong> (${row.year})</div>
               <div>Actual: ${formatNumber(row.trade_value_usd_millions)} (USD M)</div>

@@ -25,9 +25,9 @@ def parse_args() -> argparse.Namespace:
         default="/Users/ian/trade_data_warehouse/gravity/gravity_v202211.parquet",
         help="Path to CEPII gravity parquet.",
     )
-    parser.add_argument("--start-year", type=int, default=2019)
-    parser.add_argument("--end-year", type=int, default=2021)
-    parser.add_argument("--top-n", type=int, default=20)
+    parser.add_argument("--start-year", type=int, default=2005)
+    parser.add_argument("--end-year", type=int, default=2022)
+    parser.add_argument("--top-n", type=int, default=30)
     parser.add_argument(
         "--out-parquet",
         default="docs/data/baci_gravity_viz.parquet",
