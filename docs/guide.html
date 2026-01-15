@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Interpretation Guide | Gravity Trade Analysis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: #0f1c2f;
+      --panel-alt: #14243a;
+      --ink: #e9eef5;
+      --muted: #8a96a8;
+      --accent: #2f9c95;
+      --accent-warm: #f4b34a;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Sora", sans-serif;
+      background: radial-gradient(circle at 20% 20%, #1a2b44 0%, #0b1220 55%, #080f18 100%);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(12px);
+      background: rgba(11, 18, 32, 0.92);
+      border-bottom: 1px solid rgba(233, 238, 245, 0.08);
+    }
+
+    .nav-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 32px;
+    }
+
+    .logo {
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      color: var(--ink);
+    }
+
+    nav ul {
+      display: flex;
+      gap: 22px;
+      list-style: none;
+      flex-wrap: wrap;
+    }
+
+    nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+    }
+
+    nav a:hover {
+      color: var(--ink);
+    }
+
+    .wrapper {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 24px 64px;
+    }
+
+    header {
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      font-size: clamp(28px, 3vw, 42px);
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #2f9c95 0%, #f4b34a 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      line-height: 1.7;
+      max-width: 900px;
+      font-size: 13px;
+    }
+
+    .toc {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin: 24px 0 32px;
+    }
+
+    .toc a {
+      background: var(--panel);
+      border: 1px solid rgba(233, 238, 245, 0.08);
+      border-radius: 12px;
+      padding: 12px 14px;
+      text-decoration: none;
+      color: var(--ink);
+      font-size: 12px;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+    }
+
+    section {
+      background: var(--panel);
+      border: 1px solid rgba(233, 238, 245, 0.08);
+      border-radius: 16px;
+      padding: 20px 22px;
+      margin-bottom: 18px;
+    }
+
+    section h2 {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--accent-warm);
+      margin-bottom: 10px;
+    }
+
+    section h3 {
+      font-size: 13px;
+      margin: 14px 0 6px;
+      color: var(--ink);
+    }
+
+    p {
+      color: var(--muted);
+      line-height: 1.8;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    ul {
+      margin-left: 18px;
+      margin-bottom: 12px;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 13px;
+    }
+
+    .math {
+      font-family: "IBM Plex Mono", monospace;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid rgba(233, 238, 245, 0.08);
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin: 10px 0 16px;
+      color: var(--ink);
+      font-size: 12px;
+      overflow-x: auto;
+    }
+
+    .callout {
+      border-left: 3px solid var(--accent);
+      padding-left: 12px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-container">
+      <div class="logo">Gravity Trade Analysis</div>
+      <ul>
+        <li><a href="landing.html">Home</a></li>
+        <li><a href="index.html">Tool</a></li>
+        <li><a href="trade-map.html?v=20260115">Trade Map</a></li>
+        <li><a href="trade-sphere.html">Trade Sphere</a></li>
+        <li><a href="policy-lab.html?v=20260115">Policy Lab</a></li>
+        <li><a href="guide.html">Guide</a></li>
+        <li><a href="topology.html">Topology</a></li>
+        <li><a href="advanced_topology.html">Research Lab</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="wrapper">
+    <header>
+      <h1>Interpretation Guide</h1>
+      <p class="subtitle">
+        This page explains each visualization and diagnostic in the platform, with intuition, math, and
+        worked examples. It is written to be usable for undergraduates but rigorous enough for research.
+      </p>
+    </header>
+
+    <div class="toc">
+      <a href="#data">Data & Variables</a>
+      <a href="#gravity">Gravity Model</a>
+      <a href="#tool">3D Tool (Explorer)</a>
+      <a href="#map">Trade Map</a>
+      <a href="#sphere">Trade Sphere</a>
+      <a href="#surface">Residual Surface</a>
+      <a href="#topology">Topology Signals</a>
+      <a href="#research">Research Lab Metrics</a>
+      <a href="#policy">Policy Lab</a>
+    </div>
+
+    <section id="data">
+      <h2>Data & Variables</h2>
+      <p>
+        The platform uses BACI bilateral trade flows and CEPII gravity covariates.
+        Trade values are in USD millions. For the current interactive demos, we use a
+        top‑20 exporter/importer sample to keep the browser responsive.
+      </p>
+      <ul>
+        <li><strong>trade_value_usd_millions</strong>: observed bilateral trade.</li>
+        <li><strong>ln_dist</strong>: log distance between main cities (CEPII).</li>
+        <li><strong>ln_gdp_o, ln_gdp_d</strong>: exporter/importer GDP logs.</li>
+        <li><strong>contig, comlang_off, comcol</strong>: contiguity, common language, colonial ties.</li>
+        <li><strong>rta_coverage</strong>: regional trade agreement coverage.</li>
+      </ul>
+    </section>
+
+    <section id="gravity">
+      <h2>Gravity Model (Core)</h2>
+      <p>
+        The baseline specification is a structural gravity model estimated via PPML
+        with exporter/importer fixed effects (and model variants in the Model Lab).
+      </p>
+      <div class="math">
+        X<sub>ij</sub> = exp(α<sub>i</sub> + δ<sub>j</sub> + β' Z<sub>ij</sub>) + ε<sub>ij</sub>
+      </div>
+      <p>
+        Predicted trade (X̂<sub>ij</sub>) comes from the fitted model. The key diagnostic is the residual:
+      </p>
+      <div class="math">
+        log_trade_gap = log(1 + X<sub>ij</sub>) − log(1 + X̂<sub>ij</sub>)
+      </div>
+      <p>
+        Positive gaps mean trade exceeds the model prediction; negative gaps mean under‑trade.
+      </p>
+    </section>
+
+    <section id="tool">
+      <h2>3D Tool (Explorer)</h2>
+      <p>
+        The Explorer places each dyad in a 3D space. The axes are fixed:
+      </p>
+      <ul>
+        <li><strong>X</strong>: log distance (ln dist)</li>
+        <li><strong>Y</strong>: log GDP product (ln gdp_o + ln gdp_d)</li>
+        <li><strong>Z</strong>: selected metric (trade, predicted trade, residual, etc.)</li>
+      </ul>
+      <p>
+        Use the controls to swap metrics or color scales. Hovering a point shows a dyad‑level breakdown.
+      </p>
+      <div class="callout">
+        Example: A dyad far on X (long distance) but high on Z (trade) often reflects
+        strong institutions, agreements, or supply chain integration not captured by distance alone.
+      </div>
+    </section>
+
+    <section id="map">
+      <h2>Trade Map</h2>
+      <p>
+        The map shows geographic centroids with great‑circle arcs between trading partners.
+        Line thickness scales with the selected metric, and node size scales with total trade.
+      </p>
+      <ul>
+        <li>Use <strong>Top N</strong> to keep only the strongest flows.</li>
+        <li>Use <strong>Min trade</strong> to remove noise.</li>
+        <li>Residuals use a diverging color scale (negative → positive).</li>
+      </ul>
+    </section>
+
+    <section id="sphere">
+      <h2>Trade Sphere</h2>
+      <p>
+        The sphere is not geographic. It is an MDS embedding based on trade distances.
+        Nearby nodes indicate similar distance structure, not physical proximity.
+      </p>
+      <p>
+        Use this view to inspect clusters of countries that “feel close” in trade space.
+      </p>
+    </section>
+
+    <section id="surface">
+      <h2>Residual Surface</h2>
+      <p>
+        Residuals are projected onto a 2D grid (via MDS midpoints) and smoothed.
+        The surface height indicates under‑ or over‑performance relative to the model.
+      </p>
+      <div class="callout">
+        Example: A ridge in 2020 often corresponds to exceptional trade resilience,
+        while troughs align with contractionary shocks.
+      </div>
+    </section>
+
+    <section id="topology">
+      <h2>Topology Signals</h2>
+      <p>
+        The field is built from residuals and then evolved with a stylized PDE to illustrate
+        how clustering and fragmentation could propagate through the trade system.
+        The “β₀” and “β₁” summaries are coarse topology indicators derived from thresholding the field.
+      </p>
+      <div class="math">
+        ∂<sub>t</sub> y = κ Δy + λ T(y) − α y³
+      </div>
+      <ul>
+        <li><strong>κ</strong> (diffusion): smooths residual clusters.</li>
+        <li><strong>λ</strong> (topology): amplifies neighborhood structure.</li>
+        <li><strong>α</strong> (congestion): penalizes extreme amplitudes.</li>
+      </ul>
+      <p>
+        This is a visualization tool, not a calibrated structural dynamic model.
+        The data‑driven part is the field itself; the evolution is pedagogical.
+      </p>
+    </section>
+
+    <section id="research">
+      <h2>Research Lab Metrics</h2>
+      <p>
+        The Research Lab summarizes time‑series diagnostics:
+      </p>
+      <ul>
+        <li><strong>Residual dispersion</strong>: spread of model errors.</li>
+        <li><strong>Wasserstein shift</strong>: year‑to‑year distribution change.</li>
+        <li><strong>HHI concentration</strong>: export/import concentration.</li>
+      </ul>
+      <div class="callout">
+        Example: A spike in Wasserstein distance around 2020 is consistent with COVID‑19
+        reallocation shocks in global trade.
+      </div>
+    </section>
+
+    <section id="policy">
+      <h2>Policy Lab</h2>
+      <p>
+        The current Policy Lab is a partial‑equilibrium counterfactual:
+        it applies a trade‑cost shock and recomputes flows holding fixed effects constant.
+      </p>
+      <div class="math">
+        X<sub>ij</sub><sup>cf</sup> = X̂<sub>ij</sub> · τ<sub>ij</sub><sup>−θ</sup>
+      </div>
+      <p>
+        Use this for rapid scenario intuition (tariff changes, bilateral cost reductions).
+        A full GE solver is the next step for research‑grade welfare analysis.
+      </p>
+    </section>
+  </div>
+</body>
+</html>

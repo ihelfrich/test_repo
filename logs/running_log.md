@@ -569,3 +569,4 @@ Full Methodology (Technical Depth)
 - 2026-01-15 14:53:32 -0600: Merged Trade Map init logic to load trade data before centroids; hardened Policy Lab to map ISO codes to indices and guard missing years.
 - 2026-01-15 15:03:36 -0600: Rebuilt ISO numeric map using gravity_countries (matches world atlas IDs); switched Policy Lab to partial-equilibrium counterfactuals with target/bilateral metrics; fixed map legend z-index.
 - 2026-01-15 15:20:58 -0600: Added cache-busting query params to Trade Map and Policy Lab nav links to avoid stale HTML in GitHub Pages cache.
+- 2026-01-15 15:22:40 -0600: Added Interpretation Guide page with data/model/visualization explanations and linked it across navigation.
