@@ -419,6 +419,7 @@
     const welfareTable = document.getElementById('welfareTable');
 
     let payload = null;
+    let countryIndex = {};
 
     function formatPct(value) {
       if (!Number.isFinite(value)) return '-';
@@ -591,12 +592,20 @@
       statusPill.textContent = 'Running';
       runBtn.disabled = true;
       const yearKey = yearSelect.value;
+      if (!yearKey || !payload.by_year[yearKey]) {
+        statusPill.textContent = 'Error';
+        summaryText.textContent = 'No data for selected year.';
+        runBtn.disabled = false;
+        return;
+      }
       const theta = parseFloat(thetaSlider.value);
       const rate = parseFloat(tariffSlider.value) / 100;
+      const targetIso = targetSelect.value;
+      const partnerIso = partnerSelect.value;
       const shock = {
         type: shockType.value,
-        target: targetSelect.selectedIndex,
-        partner: partnerSelect.selectedIndex,
+        target: countryIndex[targetIso],
+        partner: countryIndex[partnerIso],
         rate
       };
 
@@ -607,6 +616,15 @@
 
       if (shock.type === 'import_tariff') {
         shock.partner = null;
+      }
+
+      if (shock.type === 'bilateral_tariff' || shock.type === 'rta') {
+        if (shock.target === undefined || shock.partner === undefined) {
+          statusPill.textContent = 'Error';
+          summaryText.textContent = 'Select valid target and partner countries.';
+          runBtn.disabled = false;
+          return;
+        }
       }
 
       try {
@@ -659,7 +677,11 @@
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         payload = await response.json();
         populateSelectors();
-        dataNote.textContent = `Source: ${payload.meta.source} · ${payload.meta.countries.length} countries.`;
+        countryIndex = {};
+        (payload.meta.countries || []).forEach((iso, idx) => {
+          countryIndex[iso] = idx;
+        });
+        dataNote.textContent = `Source: ${payload.meta.source} · ${payload.meta.countries.length} countries · ${payload.meta.years.length} years.`;
         runSimulation();
       } catch (err) {
         console.warn('Policy Lab data load failed', err);
