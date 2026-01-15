@@ -136,6 +136,13 @@ This platform represents a **paradigm shift** in trade analysis by integrating *
 - 🎨 **Color-Coded** - Blue (underperforming) to Red (overperforming) gradient
 - 📏 **Variable Sizing** - Point size reflects trade volume
 
+### Additional Views
+
+- **Trade Sphere**: `https://ihelfrich.github.io/test_repo/trade-sphere.html`
+- **Residual Surface**: `https://ihelfrich.github.io/test_repo/residual-surface.html`
+- **Model Lab**: `https://ihelfrich.github.io/test_repo/model-lab.html`
+- **Research Lab**: `https://ihelfrich.github.io/test_repo/advanced_topology.html`
+
 ---
 
 ## 📚 Documentation
@@ -291,7 +298,11 @@ open docs/index.html
 ```
 
 **Option 2: Live Demo**
-Visit: [https://ihelfrich.github.io/test_repo/](https://ihelfrich.github.io/test_repo/)
+- Main tool: [https://ihelfrich.github.io/test_repo/](https://ihelfrich.github.io/test_repo/)
+- Trade Sphere: `https://ihelfrich.github.io/test_repo/trade-sphere.html`
+- Residual Surface: `https://ihelfrich.github.io/test_repo/residual-surface.html`
+- Model Lab: `https://ihelfrich.github.io/test_repo/model-lab.html`
+- Research Lab: `https://ihelfrich.github.io/test_repo/advanced_topology.html`
 
 ---
 

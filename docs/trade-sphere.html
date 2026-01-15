@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Trade Sphere | Gravity Trade Analysis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Sora:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0b121b;
+      --panel: #121c2a;
+      --panel-alt: #152233;
+      --ink: #e9eef5;
+      --muted: #8a96a8;
+      --accent: #2f9c95;
+      --warm: #f4b34a;
+      --line: rgba(233, 238, 245, 0.08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Sora", sans-serif;
+      background: radial-gradient(circle at 20% 15%, #162233 0%, #0b121b 60%, #090f16 100%);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(12px);
+      background: rgba(9, 15, 22, 0.9);
+      border-bottom: 1px solid rgba(233, 238, 245, 0.08);
+    }
+
+    .nav-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 24px;
+    }
+
+    .logo { font-weight: 700; letter-spacing: 0.4px; }
+
+    nav ul {
+      display: flex;
+      gap: 18px;
+      list-style: none;
+      flex-wrap: wrap;
+    }
+
+    nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+    }
+
+    nav a:hover { color: var(--ink); }
+
+    header {
+      padding: 28px clamp(18px, 4vw, 48px) 16px;
+    }
+
+    h1 {
+      font-size: clamp(26px, 3.4vw, 40px);
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, var(--accent), var(--warm));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      max-width: 860px;
+      line-height: 1.6;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(280px, 340px) 1fr;
+      gap: 20px;
+      padding: 0 clamp(18px, 4vw, 48px) 48px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 18px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    .panel h2 {
+      font-size: 12px;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: var(--warm);
+      margin-bottom: 12px;
+    }
+
+    label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    select, input[type="range"] {
+      width: 100%;
+      background: #0f1825;
+      color: var(--ink);
+      border: 1px solid rgba(233, 238, 245, 0.12);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-family: inherit;
+      margin-bottom: 12px;
+    }
+
+    input[type="range"] {
+      padding: 0;
+      accent-color: var(--accent);
+    }
+
+    .note {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    #viz {
+      position: relative;
+      height: 70vh;
+      min-height: 480px;
+      border-radius: 16px;
+      border: 1px solid rgba(233, 238, 245, 0.12);
+      overflow: hidden;
+      background: radial-gradient(circle at 30% 25%, rgba(47, 156, 149, 0.12), transparent 60%);
+    }
+
+    #tooltip {
+      position: absolute;
+      pointer-events: none;
+      opacity: 0;
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: rgba(17, 27, 42, 0.95);
+      color: var(--ink);
+      font-size: 12px;
+      font-family: "IBM Plex Mono", monospace;
+      transition: opacity 0.15s ease;
+    }
+
+    .legend {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 10px;
+    }
+
+    .legend-bar {
+      flex: 1;
+      height: 8px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #2b6cb0, #2f9c95, #f4b34a);
+    }
+
+    .meta {
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-container">
+      <div class="logo">Gravity Trade Analysis</div>
+      <ul>
+        <li><a href="landing.html">Home</a></li>
+        <li><a href="index.html">Tool</a></li>
+        <li><a href="trade-sphere.html">Trade Sphere</a></li>
+        <li><a href="residual-surface.html">Residual Surface</a></li>
+        <li><a href="advanced_topology.html">Research Lab</a></li>
+        <li><a href="methodology.html">Methodology</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <header>
+    <h1>Trade Sphere</h1>
+    <p class="subtitle">
+      A 3D trade-network embedding derived from gravity distances. The sphere positions are
+      distance-based (not geographic) so clusters reflect trade proximity rather than latitude.
+    </p>
+  </header>
+
+  <section class="layout">
+    <div class="panel">
+      <h2>Controls</h2>
+      <label for="yearSelect">Year <span id="yearLabel"></span></label>
+      <select id="yearSelect"></select>
+
+      <label for="modelSelect">Model <span id="modelLabel"></span></label>
+      <select id="modelSelect"></select>
+
+      <label for="metricSelect">Arc Color <span id="metricLabel"></span></label>
+      <select id="metricSelect">
+        <option value="delta_pred">Counterfactual Δ</option>
+        <option value="residual">Residual (Actual - Pred)</option>
+        <option value="pct_change">Counterfactual %</option>
+      </select>
+
+      <label for="topN">Top Flows <span id="topNLabel"></span></label>
+      <input id="topN" type="range" min="50" max="400" step="10" value="200" />
+
+      <label for="arcOpacity">Arc Opacity <span id="arcOpacityLabel"></span></label>
+      <input id="arcOpacity" type="range" min="0.2" max="1" step="0.1" value="0.6" />
+
+      <label for="nodeSize">Node Size <span id="nodeSizeLabel"></span></label>
+      <input id="nodeSize" type="range" min="0.6" max="2" step="0.1" value="1" />
+
+      <label for="distScale">Distance Elasticity <span id="distScaleLabel"></span></label>
+      <input id="distScale" type="range" min="0" max="2" step="0.05" value="1" />
+
+      <label for="contigScale">Contiguity Effect <span id="contigScaleLabel"></span></label>
+      <input id="contigScale" type="range" min="0" max="2" step="0.05" value="1" />
+
+      <label for="langScale">Language Effect <span id="langScaleLabel"></span></label>
+      <input id="langScale" type="range" min="0" max="2" step="0.05" value="1" />
+
+      <label for="colScale">Colonial Effect <span id="colScaleLabel"></span></label>
+      <input id="colScale" type="range" min="0" max="2" step="0.05" value="1" />
+
+      <label for="rtaScale">RTA Effect <span id="rtaScaleLabel"></span></label>
+      <input id="rtaScale" type="range" min="0" max="2" step="0.05" value="1" />
+
+      <div class="legend">
+        <span>Loss</span>
+        <div class="legend-bar"></div>
+        <span>Gain</span>
+      </div>
+
+      <p class="note" id="note">
+        Embedding computed from ln(distance). Arc colors track model-specific residuals and counterfactual shifts.
+      </p>
+      <div class="meta" id="meta"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Network View</h2>
+      <div id="viz">
+        <div id="tooltip"></div>
+      </div>
+    </div>
+  </section>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+      }
+    }
+  </script>
+  <script type="module">
+    import * as THREE from "three";
+    import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+    const dataUrl = new URL('data/baci_gravity_viz.json', window.location.href).href;
+    const embedUrl = new URL('data/country_embedding.json', window.location.href).href;
+
+    const yearSelect = document.getElementById('yearSelect');
+    const modelSelect = document.getElementById('modelSelect');
+    const metricSelect = document.getElementById('metricSelect');
+    const topNSlider = document.getElementById('topN');
+    const arcOpacity = document.getElementById('arcOpacity');
+    const nodeSize = document.getElementById('nodeSize');
+    const distScale = document.getElementById('distScale');
+    const contigScale = document.getElementById('contigScale');
+    const langScale = document.getElementById('langScale');
+    const colScale = document.getElementById('colScale');
+    const rtaScale = document.getElementById('rtaScale');
+    const yearLabel = document.getElementById('yearLabel');
+    const modelLabel = document.getElementById('modelLabel');
+    const metricLabel = document.getElementById('metricLabel');
+    const topNLabel = document.getElementById('topNLabel');
+    const arcOpacityLabel = document.getElementById('arcOpacityLabel');
+    const nodeSizeLabel = document.getElementById('nodeSizeLabel');
+    const distScaleLabel = document.getElementById('distScaleLabel');
+    const contigScaleLabel = document.getElementById('contigScaleLabel');
+    const langScaleLabel = document.getElementById('langScaleLabel');
+    const colScaleLabel = document.getElementById('colScaleLabel');
+    const rtaScaleLabel = document.getElementById('rtaScaleLabel');
+    const meta = document.getElementById('meta');
+    const tooltip = document.getElementById('tooltip');
+
+    const container = document.getElementById('viz');
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0x0b121b, 120, 280);
+
+    const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 1, 600);
+    camera.position.set(0, 60, 140);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    container.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+
+    const sphere = new THREE.Mesh(
+      new THREE.SphereGeometry(60, 32, 32),
+      new THREE.MeshBasicMaterial({ color: 0x122133, wireframe: true, transparent: true, opacity: 0.35 })
+    );
+    scene.add(sphere);
+
+    const ambient = new THREE.AmbientLight(0xffffff, 0.8);
+    scene.add(ambient);
+
+    const pointRaycaster = new THREE.Raycaster();
+    pointRaycaster.params.Points.threshold = 2.5;
+    const pointer = new THREE.Vector2();
+
+    let payload = null;
+    let embedding = null;
+    let nodes = null;
+    let arcsGroup = null;
+    let modelMeta = {};
+
+    const state = {
+      year: null,
+      model: null,
+      metric: 'delta_pred',
+      topN: 200,
+      arcOpacity: 0.6,
+      nodeSize: 1,
+      scales: {
+        dist: 1,
+        contig: 1,
+        lang: 1,
+        col: 1,
+        rta: 1,
+      },
+    };
+
+    const colorFromValue = (value, min, max) => {
+      if (max === min) return new THREE.Color(0x2f9c95);
+      const t = (value - min) / (max - min);
+      const hue = (1 - t) * 0.62;
+      const color = new THREE.Color();
+      color.setHSL(hue, 0.7, 0.55);
+      return color;
+    };
+
+    const formatNumber = (value) => {
+      if (!Number.isFinite(value)) return 'n/a';
+      return value.toLocaleString(undefined, { maximumFractionDigits: 2 });
+    };
+
+    const buildNodes = () => {
+      if (!embedding) return;
+      if (nodes) {
+        nodes.geometry.dispose();
+        nodes.material.dispose();
+        scene.remove(nodes);
+      }
+      const positions = [];
+      const colors = [];
+      const ids = [];
+
+      Object.entries(embedding.embeddings).forEach(([iso, pos], idx) => {
+        positions.push(pos.x, pos.y, pos.z);
+        colors.push(0.87, 0.93, 0.95);
+        ids.push(idx);
+      });
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+      geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+      geometry.setAttribute('id', new THREE.Float32BufferAttribute(ids, 1));
+
+      const material = new THREE.PointsMaterial({
+        size: 1.6 * state.nodeSize,
+        sizeAttenuation: true,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.9,
+      });
+
+      nodes = new THREE.Points(geometry, material);
+      scene.add(nodes);
+    };
+
+    const buildArcs = () => {
+      if (!payload || !embedding) return;
+      if (arcsGroup) {
+        arcsGroup.children.forEach((child) => {
+          child.geometry.dispose();
+          child.material.dispose();
+        });
+        scene.remove(arcsGroup);
+      }
+      arcsGroup = new THREE.Group();
+
+      const rows = payload.rows.filter(row => row.year === state.year);
+      const sorted = [...rows].sort((a, b) => b.trade_value_usd_millions - a.trade_value_usd_millions);
+      const slice = sorted.slice(0, state.topN);
+
+      const values = slice.map(row => row[state.metric]);
+      const min = Math.min(...values);
+      const max = Math.max(...values);
+
+      slice.forEach(row => {
+        const start = embedding.embeddings[row.iso_o];
+        const end = embedding.embeddings[row.iso_d];
+        if (!start || !end) return;
+        const mid = {
+          x: (start.x + end.x) * 0.5,
+          y: (start.y + end.y) * 0.5,
+          z: (start.z + end.z) * 0.5,
+        };
+        const lift = 20;
+        const midNorm = new THREE.Vector3(mid.x, mid.y, mid.z).normalize().multiplyScalar(60 + lift);
+
+        const curve = new THREE.QuadraticBezierCurve3(
+          new THREE.Vector3(start.x, start.y, start.z),
+          midNorm,
+          new THREE.Vector3(end.x, end.y, end.z)
+        );
+        const points = curve.getPoints(40);
+        const geometry = new THREE.BufferGeometry().setFromPoints(points);
+
+        const color = colorFromValue(row[state.metric], min, max);
+        const material = new THREE.LineBasicMaterial({
+          color,
+          transparent: true,
+          opacity: state.arcOpacity,
+        });
+
+        const line = new THREE.Line(geometry, material);
+        arcsGroup.add(line);
+      });
+
+      scene.add(arcsGroup);
+    };
+
+    const updateLabels = () => {
+      yearLabel.textContent = state.year || '';
+      modelLabel.textContent = modelSelect.options[modelSelect.selectedIndex]?.text || '';
+      metricLabel.textContent = metricSelect.options[metricSelect.selectedIndex].text;
+      topNLabel.textContent = `${state.topN}`;
+      arcOpacityLabel.textContent = state.arcOpacity.toFixed(1);
+      nodeSizeLabel.textContent = `${state.nodeSize.toFixed(1)}×`;
+      distScaleLabel.textContent = state.scales.dist.toFixed(2) + '×';
+      contigScaleLabel.textContent = state.scales.contig.toFixed(2) + '×';
+      langScaleLabel.textContent = state.scales.lang.toFixed(2) + '×';
+      colScaleLabel.textContent = state.scales.col.toFixed(2) + '×';
+      rtaScaleLabel.textContent = state.scales.rta.toFixed(2) + '×';
+    };
+
+    const computeDerived = () => {
+      const coeffs = modelMeta[state.model]?.coefficients || {};
+      payload.rows.forEach(row => {
+        const tradePred = row[`trade_pred_${state.model}`] ?? row.trade_pred;
+        const baseEta = row[`base_eta_${state.model}`] ?? row.base_eta;
+        const deltaEta =
+          (state.scales.dist - 1) * (coeffs.ln_dist || 0) * row.ln_dist +
+          (state.scales.contig - 1) * (coeffs.contig || 0) * row.contig +
+          (state.scales.lang - 1) * (coeffs.comlang_off || 0) * row.comlang_off +
+          (state.scales.col - 1) * (coeffs.comcol || 0) * row.comcol +
+          (state.scales.rta - 1) * (coeffs.rta_coverage || 0) * row.rta_coverage;
+        const etaCf = baseEta + deltaEta;
+        const link = modelMeta[state.model]?.link || 'log';
+        let tradeCf = link === 'log1p' ? Math.expm1(etaCf) : Math.exp(etaCf);
+        if (!Number.isFinite(tradeCf)) tradeCf = 0;
+        tradeCf = Math.max(0, tradeCf);
+        row.trade_pred = tradePred;
+        row.trade_cf = tradeCf;
+        row.delta_pred = tradeCf - tradePred;
+        row.residual = row.trade_value_usd_millions - tradePred;
+        row.pct_change = tradePred > 0 ? (tradeCf - tradePred) / tradePred : 0;
+      });
+    };
+
+    const update = () => {
+      state.year = parseInt(yearSelect.value, 10);
+      state.model = modelSelect.value;
+      state.metric = metricSelect.value;
+      state.topN = parseInt(topNSlider.value, 10);
+      state.arcOpacity = parseFloat(arcOpacity.value);
+      state.nodeSize = parseFloat(nodeSize.value);
+      state.scales.dist = parseFloat(distScale.value);
+      state.scales.contig = parseFloat(contigScale.value);
+      state.scales.lang = parseFloat(langScale.value);
+      state.scales.col = parseFloat(colScale.value);
+      state.scales.rta = parseFloat(rtaScale.value);
+      if (nodes) nodes.material.size = 1.6 * state.nodeSize;
+      computeDerived();
+      buildArcs();
+      updateLabels();
+      meta.textContent = `Rows: ${payload.rows.length} | Countries: ${Object.keys(embedding.embeddings).length}`;
+    };
+
+    const animate = () => {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    };
+
+    const handleResize = () => {
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
+    };
+    window.addEventListener('resize', handleResize);
+
+    renderer.domElement.addEventListener('mousemove', (event) => {
+      if (!nodes) return;
+      const rect = renderer.domElement.getBoundingClientRect();
+      pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+      pointRaycaster.setFromCamera(pointer, camera);
+      const intersects = pointRaycaster.intersectObject(nodes);
+      if (intersects.length) {
+        const hit = intersects[0];
+        const idx = Math.round(hit.object.geometry.getAttribute('id').getX(hit.index));
+        const iso = Object.keys(embedding.embeddings)[idx];
+        tooltip.style.opacity = 1;
+        tooltip.style.left = `${event.clientX - rect.left + 12}px`;
+        tooltip.style.top = `${event.clientY - rect.top + 12}px`;
+        tooltip.innerHTML = `<strong>${iso}</strong><br/>Trade node`;
+      } else {
+        tooltip.style.opacity = 0;
+      }
+    });
+
+    const loadData = async () => {
+      const [dataResp, embedResp] = await Promise.all([
+        fetch(dataUrl, { cache: 'no-store' }),
+        fetch(embedUrl, { cache: 'no-store' })
+      ]);
+      payload = await dataResp.json();
+      embedding = await embedResp.json();
+
+      modelMeta = payload.meta.models || {};
+      modelSelect.innerHTML = '';
+      Object.keys(modelMeta).forEach((key) => {
+        const option = document.createElement('option');
+        option.value = key;
+        option.textContent = modelMeta[key].label || key;
+        modelSelect.appendChild(option);
+      });
+      state.model = payload.meta.default_model || Object.keys(modelMeta)[0];
+      modelSelect.value = state.model;
+
+      yearSelect.innerHTML = '';
+      payload.meta.years.forEach((year) => {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        yearSelect.appendChild(option);
+      });
+      state.year = payload.meta.years[payload.meta.years.length - 1];
+      yearSelect.value = state.year;
+
+      buildNodes();
+      update();
+      animate();
+    };
+
+    [yearSelect, modelSelect, metricSelect, topNSlider, arcOpacity, nodeSize, distScale, contigScale, langScale, colScale, rtaScale].forEach(control => {
+      control.addEventListener('input', update);
+      control.addEventListener('change', update);
+    });
+
+    loadData();
+  </script>
+</body>
+</html>

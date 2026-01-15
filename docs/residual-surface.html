@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Residual Surface | Gravity Trade Analysis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Sora:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0b121b;
+      --panel: #121c2a;
+      --panel-alt: #152233;
+      --ink: #e9eef5;
+      --muted: #8a96a8;
+      --accent: #2f9c95;
+      --warm: #f4b34a;
+      --line: rgba(233, 238, 245, 0.08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Sora", sans-serif;
+      background: radial-gradient(circle at 20% 15%, #162233 0%, #0b121b 60%, #090f16 100%);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(12px);
+      background: rgba(9, 15, 22, 0.9);
+      border-bottom: 1px solid rgba(233, 238, 245, 0.08);
+    }
+
+    .nav-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 24px;
+    }
+
+    .logo { font-weight: 700; letter-spacing: 0.4px; }
+
+    nav ul {
+      display: flex;
+      gap: 18px;
+      list-style: none;
+      flex-wrap: wrap;
+    }
+
+    nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+    }
+
+    nav a:hover { color: var(--ink); }
+
+    header {
+      padding: 28px clamp(18px, 4vw, 48px) 16px;
+    }
+
+    h1 {
+      font-size: clamp(26px, 3.4vw, 40px);
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, var(--accent), var(--warm));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      max-width: 860px;
+      line-height: 1.6;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(280px, 340px) 1fr;
+      gap: 20px;
+      padding: 0 clamp(18px, 4vw, 48px) 48px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 18px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    .panel h2 {
+      font-size: 12px;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: var(--warm);
+      margin-bottom: 12px;
+    }
+
+    label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    select, input[type="range"] {
+      width: 100%;
+      background: #0f1825;
+      color: var(--ink);
+      border: 1px solid rgba(233, 238, 245, 0.12);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-family: inherit;
+      margin-bottom: 12px;
+    }
+
+    input[type="range"] {
+      padding: 0;
+      accent-color: var(--accent);
+    }
+
+    #viz {
+      position: relative;
+      height: 70vh;
+      min-height: 480px;
+      border-radius: 16px;
+      border: 1px solid rgba(233, 238, 245, 0.12);
+      overflow: hidden;
+      background: radial-gradient(circle at 30% 25%, rgba(47, 156, 149, 0.12), transparent 60%);
+    }
+
+    .meta {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 10px;
+    }
+
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-container">
+      <div class="logo">Gravity Trade Analysis</div>
+      <ul>
+        <li><a href="landing.html">Home</a></li>
+        <li><a href="index.html">Tool</a></li>
+        <li><a href="trade-sphere.html">Trade Sphere</a></li>
+        <li><a href="residual-surface.html">Residual Surface</a></li>
+        <li><a href="advanced_topology.html">Research Lab</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <header>
+    <h1>Residual Surface</h1>
+    <p class="subtitle">
+      A 3D heightmap of gravity residuals (actual minus predicted, log scale) on a
+      spatial grid derived from trade-distance embedding.
+    </p>
+  </header>
+
+  <section class="layout">
+    <div class="panel">
+      <h2>Controls</h2>
+      <label for="yearSelect">Year <span id="yearLabel"></span></label>
+      <select id="yearSelect"></select>
+
+      <label for="heightScale">Height Scale <span id="heightLabel"></span></label>
+      <input id="heightScale" type="range" min="10" max="80" step="5" value="40" />
+
+      <label for="colorMode">Color Mode <span id="colorLabel"></span></label>
+      <select id="colorMode">
+        <option value="diverging">Diverging</option>
+        <option value="viridis">Viridis</option>
+        <option value="warm">Warm</option>
+      </select>
+
+      <label for="wireframe">Wireframe <span id="wireLabel"></span></label>
+      <select id="wireframe">
+        <option value="off">Off</option>
+        <option value="on">On</option>
+      </select>
+
+      <div class="meta" id="meta">Loading field data…</div>
+    </div>
+
+    <div class="panel">
+      <h2>Surface View</h2>
+      <div id="viz"></div>
+    </div>
+  </section>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+      }
+    }
+  </script>
+  <script type="module">
+    import * as THREE from "three";
+    import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+    const dataUrl = new URL('data/topology_fields.json', window.location.href).href;
+    const container = document.getElementById('viz');
+
+    const yearSelect = document.getElementById('yearSelect');
+    const heightScale = document.getElementById('heightScale');
+    const colorMode = document.getElementById('colorMode');
+    const wireframe = document.getElementById('wireframe');
+    const yearLabel = document.getElementById('yearLabel');
+    const heightLabel = document.getElementById('heightLabel');
+    const colorLabel = document.getElementById('colorLabel');
+    const wireLabel = document.getElementById('wireLabel');
+    const meta = document.getElementById('meta');
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0x0b121b, 120, 260);
+
+    const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 1, 500);
+    camera.position.set(0, 80, 120);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    container.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+
+    const light = new THREE.DirectionalLight(0xffffff, 0.8);
+    light.position.set(60, 120, 40);
+    scene.add(light);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+
+    let payload = null;
+    let surface = null;
+    let gridSize = 0;
+
+    const divergingColor = (value, min, max) => {
+      if (max === min) return new THREE.Color(0x2f9c95);
+      const t = (value - min) / (max - min);
+      const hue = t < 0.5 ? 0.62 + (0.62 - 0.2) * (0.5 - t) : 0.08 + (t - 0.5) * 0.4;
+      const color = new THREE.Color();
+      color.setHSL(hue, 0.7, 0.5);
+      return color;
+    };
+
+    const viridisColor = (value, min, max) => {
+      if (max === min) return new THREE.Color(0x2f9c95);
+      const t = (value - min) / (max - min);
+      const hue = (1 - t) * 0.62;
+      const color = new THREE.Color();
+      color.setHSL(hue, 0.7, 0.55);
+      return color;
+    };
+
+    const warmColor = (value, min, max) => {
+      if (max === min) return new THREE.Color(0xf4b34a);
+      const t = (value - min) / (max - min);
+      const color = new THREE.Color();
+      color.setHSL(0.08 + 0.1 * t, 0.7, 0.5);
+      return color;
+    };
+
+    const buildSurface = (grid) => {
+      if (surface) {
+        surface.geometry.dispose();
+        surface.material.dispose();
+        scene.remove(surface);
+      }
+      gridSize = grid.length;
+      const geometry = new THREE.PlaneGeometry(120, 120, gridSize - 1, gridSize - 1);
+      geometry.rotateX(-Math.PI / 2);
+
+      const vertices = geometry.attributes.position;
+      const colors = [];
+      const min = Math.min(...grid.flat());
+      const max = Math.max(...grid.flat());
+      const height = parseFloat(heightScale.value);
+
+      for (let i = 0; i < gridSize; i++) {
+        for (let j = 0; j < gridSize; j++) {
+          const idx = i * gridSize + j;
+          const value = grid[i][j];
+          vertices.setY(idx, value * height);
+          let color = divergingColor(value, min, max);
+          if (colorMode.value === 'viridis') color = viridisColor(value, min, max);
+          if (colorMode.value === 'warm') color = warmColor(value, min, max);
+          colors.push(color.r, color.g, color.b);
+        }
+      }
+
+      geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+      geometry.computeVertexNormals();
+
+      const material = new THREE.MeshStandardMaterial({
+        vertexColors: true,
+        roughness: 0.6,
+        metalness: 0.1,
+        side: THREE.DoubleSide,
+        wireframe: wireframe.value === 'on',
+      });
+
+      surface = new THREE.Mesh(geometry, material);
+      scene.add(surface);
+    };
+
+    const updateLabels = () => {
+      yearLabel.textContent = yearSelect.value;
+      heightLabel.textContent = `${heightScale.value}`;
+      colorLabel.textContent = colorMode.options[colorMode.selectedIndex].text;
+      wireLabel.textContent = wireframe.value === 'on' ? 'On' : 'Off';
+    };
+
+    const updateSurface = () => {
+      if (!payload) return;
+      const year = yearSelect.value;
+      const grid = payload.fields[year]?.grid;
+      if (!grid) return;
+      buildSurface(grid);
+      updateLabels();
+      meta.textContent = `Grid: ${payload.meta.grid_size} × ${payload.meta.grid_size} | Year: ${year}`;
+    };
+
+    const animate = () => {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    };
+
+    const handleResize = () => {
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
+    };
+    window.addEventListener('resize', handleResize);
+
+    const loadData = async () => {
+      const response = await fetch(dataUrl, { cache: 'no-store' });
+      payload = await response.json();
+      yearSelect.innerHTML = '';
+      payload.meta.years.forEach(year => {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        yearSelect.appendChild(option);
+      });
+      yearSelect.value = payload.meta.years[payload.meta.years.length - 1];
+      updateSurface();
+      animate();
+    };
+
+    [yearSelect, heightScale, colorMode, wireframe].forEach(control => {
+      control.addEventListener('input', updateSurface);
+      control.addEventListener('change', updateSurface);
+    });
+
+    loadData();
+  </script>
+</body>
+</html>

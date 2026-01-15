@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Model Lab | Gravity Trade Analysis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Sora:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0c141f;
+      --panel: #121c2a;
+      --panel-alt: #152233;
+      --ink: #e9eef5;
+      --muted: #8a96a8;
+      --accent: #2f9c95;
+      --warm: #f4b34a;
+      --line: rgba(233, 238, 245, 0.08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Sora", sans-serif;
+      background: radial-gradient(circle at 20% 15%, #162233 0%, #0b121b 60%, #090f16 100%);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(12px);
+      background: rgba(9, 15, 22, 0.9);
+      border-bottom: 1px solid rgba(233, 238, 245, 0.08);
+    }
+
+    .nav-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 24px;
+    }
+
+    .logo { font-weight: 700; letter-spacing: 0.4px; }
+
+    nav ul {
+      display: flex;
+      gap: 18px;
+      list-style: none;
+      flex-wrap: wrap;
+    }
+
+    nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+    }
+
+    nav a:hover { color: var(--ink); }
+
+    header {
+      padding: 28px clamp(18px, 4vw, 48px) 16px;
+    }
+
+    h1 {
+      font-size: clamp(26px, 3.4vw, 40px);
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, var(--accent), var(--warm));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      max-width: 860px;
+      line-height: 1.6;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(280px, 340px) 1fr;
+      gap: 20px;
+      padding: 0 clamp(18px, 4vw, 48px) 48px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 18px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    .panel h2 {
+      font-size: 12px;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: var(--warm);
+      margin-bottom: 12px;
+    }
+
+    label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    select {
+      width: 100%;
+      background: #0f1825;
+      color: var(--ink);
+      border: 1px solid rgba(233, 238, 245, 0.12);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-family: inherit;
+      margin-bottom: 12px;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .metric-card {
+      background: rgba(0, 0, 0, 0.18);
+      border-radius: 10px;
+      padding: 10px;
+      border: 1px solid rgba(233, 238, 245, 0.06);
+    }
+
+    .metric-card span {
+      display: block;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .metric-card strong {
+      font-size: 16px;
+      font-family: "IBM Plex Mono", monospace;
+      color: var(--ink);
+    }
+
+    #chart {
+      width: 100%;
+      height: 340px;
+      border-radius: 12px;
+      background: radial-gradient(circle at 20% 20%, rgba(47, 156, 149, 0.12), transparent 60%);
+      border: 1px solid rgba(233, 238, 245, 0.08);
+    }
+
+    .table {
+      margin-top: 16px;
+      border-top: 1px solid rgba(233, 238, 245, 0.08);
+      padding-top: 12px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .table-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 12px;
+      padding: 6px 0;
+      border-bottom: 1px dashed rgba(233, 238, 245, 0.06);
+      font-family: "IBM Plex Mono", monospace;
+    }
+
+    .table-row span:first-child {
+      font-family: "Sora", sans-serif;
+    }
+
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-container">
+      <div class="logo">Gravity Trade Analysis</div>
+      <ul>
+        <li><a href="landing.html">Home</a></li>
+        <li><a href="index.html">Tool</a></li>
+        <li><a href="trade-sphere.html">Trade Sphere</a></li>
+        <li><a href="model-lab.html">Model Lab</a></li>
+        <li><a href="advanced_topology.html">Research Lab</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <header>
+    <h1>Model Lab</h1>
+    <p class="subtitle">
+      Compare model fit and elasticities across gravity specifications. Metrics are computed
+      directly from the visualization dataset for transparency.
+    </p>
+  </header>
+
+  <section class="layout">
+    <div class="panel">
+      <h2>Controls</h2>
+      <label for="yearSelect">Year <span id="yearLabel"></span></label>
+      <select id="yearSelect"></select>
+
+      <div class="metric-grid">
+        <div class="metric-card">
+          <span>RMSE (log trade)</span>
+          <strong id="rmse">-</strong>
+        </div>
+        <div class="metric-card">
+          <span>MAE (log trade)</span>
+          <strong id="mae">-</strong>
+        </div>
+        <div class="metric-card">
+          <span>Correlation</span>
+          <strong id="corr">-</strong>
+        </div>
+        <div class="metric-card">
+          <span>Mean residual</span>
+          <strong id="residual">-</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Fit Comparison</h2>
+      <canvas id="chart"></canvas>
+      <div class="table" id="coefTable"></div>
+    </div>
+  </section>
+
+  <script>
+    const dataUrl = new URL('data/baci_gravity_viz.json', window.location.href).href;
+    const yearSelect = document.getElementById('yearSelect');
+    const yearLabel = document.getElementById('yearLabel');
+    const rmseEl = document.getElementById('rmse');
+    const maeEl = document.getElementById('mae');
+    const corrEl = document.getElementById('corr');
+    const residualEl = document.getElementById('residual');
+    const coefTable = document.getElementById('coefTable');
+    const chart = document.getElementById('chart');
+    const ctx = chart.getContext('2d');
+
+    let payload = null;
+    let modelKeys = [];
+
+    const resizeCanvas = () => {
+      chart.width = chart.clientWidth;
+      chart.height = chart.clientHeight;
+      drawChart();
+    };
+    window.addEventListener('resize', resizeCanvas);
+
+    const computeMetrics = (rows, key) => {
+      const predKey = `trade_pred_${key}`;
+      const logActual = rows.map(r => r.log_trade);
+      const logPred = rows.map(r => Math.log1p(r[predKey] ?? r.trade_pred));
+      const residuals = logActual.map((v, i) => v - logPred[i]);
+
+      const mae = residuals.reduce((acc, v) => acc + Math.abs(v), 0) / residuals.length;
+      const mse = residuals.reduce((acc, v) => acc + v * v, 0) / residuals.length;
+      const rmse = Math.sqrt(mse);
+      const meanResidual = residuals.reduce((acc, v) => acc + v, 0) / residuals.length;
+
+      const meanA = logActual.reduce((acc, v) => acc + v, 0) / logActual.length;
+      const meanP = logPred.reduce((acc, v) => acc + v, 0) / logPred.length;
+      let num = 0;
+      let denA = 0;
+      let denP = 0;
+      for (let i = 0; i < logActual.length; i++) {
+        const da = logActual[i] - meanA;
+        const dp = logPred[i] - meanP;
+        num += da * dp;
+        denA += da * da;
+        denP += dp * dp;
+      }
+      const corr = num / Math.sqrt(denA * denP || 1);
+
+      return { rmse, mae, corr, meanResidual };
+    };
+
+    const drawChart = (metrics) => {
+      if (!payload || !metrics) return;
+      const padding = 40;
+      const width = chart.width - padding * 2;
+      const height = chart.height - padding * 2;
+      ctx.clearRect(0, 0, chart.width, chart.height);
+
+      const values = modelKeys.map(key => metrics[key].rmse);
+      const maxVal = Math.max(...values, 1e-6);
+
+      modelKeys.forEach((key, idx) => {
+        const barWidth = width / modelKeys.length * 0.7;
+        const x = padding + idx * (width / modelKeys.length) + barWidth * 0.15;
+        const barHeight = (metrics[key].rmse / maxVal) * height;
+        const y = padding + (height - barHeight);
+        ctx.fillStyle = idx === 0 ? '#f4b34a' : '#2f9c95';
+        ctx.fillRect(x, y, barWidth, barHeight);
+
+        ctx.fillStyle = 'rgba(233, 238, 245, 0.8)';
+        ctx.font = '11px "IBM Plex Mono", monospace';
+        ctx.fillText(metrics[key].rmse.toFixed(3), x, y - 6);
+        ctx.fillText(key.replace(/_/g, ' '), x, chart.height - 10);
+      });
+    };
+
+    const update = () => {
+      if (!payload) return;
+      const year = yearSelect.value;
+      yearLabel.textContent = year;
+      const rows = payload.rows.filter(row => row.year === parseInt(year, 10));
+
+      const metrics = {};
+      modelKeys.forEach(key => {
+        metrics[key] = computeMetrics(rows, key);
+      });
+
+      const firstKey = modelKeys[0];
+      const first = metrics[firstKey];
+      rmseEl.textContent = first.rmse.toFixed(3);
+      maeEl.textContent = first.mae.toFixed(3);
+      corrEl.textContent = first.corr.toFixed(3);
+      residualEl.textContent = first.meanResidual.toFixed(3);
+
+      drawChart(metrics);
+
+      const coeffs = payload.meta.models?.[firstKey]?.coefficients || {};
+      const entries = Object.entries(coeffs);
+      coefTable.innerHTML = '<div class="table-row"><span>Coefficient</span><span>β</span><span>Effect</span></div>' +
+        entries.map(([key, value]) => {
+          const effect = (Math.exp(value) - 1) * 100;
+          return `<div class="table-row"><span>${key}</span><span>${value.toFixed(3)}</span><span>${effect.toFixed(1)}%</span></div>`;
+        }).join('');
+    };
+
+    const loadData = async () => {
+      const response = await fetch(dataUrl, { cache: 'no-store' });
+      payload = await response.json();
+      modelKeys = Object.keys(payload.meta.models || {});
+      yearSelect.innerHTML = '';
+      payload.meta.years.forEach(year => {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        yearSelect.appendChild(option);
+      });
+      yearSelect.value = payload.meta.years[payload.meta.years.length - 1];
+      resizeCanvas();
+      update();
+    };
+
+    yearSelect.addEventListener('change', update);
+    loadData();
+  </script>
+</body>
+</html>
