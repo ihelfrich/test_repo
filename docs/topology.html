@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Topological Trade Dynamics - Phase Transition Detector</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     * {
       margin: 0;
@@ -12,16 +15,58 @@
     }
 
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #0a0f15 0%, #1c2a3b 100%);
-      color: #e0e6ed;
+      font-family: 'Sora', sans-serif;
+      background: linear-gradient(135deg, #0a1018 0%, #182433 100%);
+      color: #e9eef5;
       overflow: hidden;
+    }
+
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(12px);
+      background: rgba(10, 16, 24, 0.9);
+      border-bottom: 1px solid rgba(233, 238, 245, 0.08);
+    }
+
+    .nav-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 24px;
+    }
+
+    .logo {
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      color: #e9eef5;
+    }
+
+    nav ul {
+      display: flex;
+      gap: 18px;
+      list-style: none;
+      flex-wrap: wrap;
+    }
+
+    nav a {
+      color: #8a96a8;
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+    }
+
+    nav a:hover {
+      color: #e9eef5;
     }
 
     .container {
       display: grid;
       grid-template-columns: 320px 1fr;
-      height: 100vh;
+      height: calc(100vh - 56px);
     }
 
     .sidebar {
@@ -34,7 +79,7 @@
     h1 {
       font-size: 22px;
       margin-bottom: 8px;
-      background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+      background: linear-gradient(135deg, #2f9c95 0%, #f4b34a 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       font-weight: 700;
@@ -106,8 +151,8 @@
 
     .value-display {
       font-size: 13px;
-      color: #e0e6ed;
-      font-family: 'Courier New', monospace;
+      color: #e9eef5;
+      font-family: 'IBM Plex Mono', monospace;
       margin-top: -12px;
       margin-bottom: 12px;
       padding: 6px 10px;
@@ -119,12 +164,12 @@
     button {
       width: 100%;
       padding: 12px;
-      background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+      background: linear-gradient(135deg, #2f9c95 0%, #f4b34a 100%);
       border: none;
       border-radius: 8px;
-      color: white;
+      color: #0f1825;
       font-size: 13px;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
       transition: all 0.2s;
       margin-bottom: 8px;
@@ -134,7 +179,7 @@
 
     button:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+      box-shadow: 0 4px 12px rgba(47, 156, 149, 0.35);
     }
 
     button:active {
@@ -142,8 +187,9 @@
     }
 
     button.secondary {
-      background: rgba(148, 163, 184, 0.1);
-      border: 1px solid rgba(148, 163, 184, 0.3);
+      background: rgba(47, 156, 149, 0.08);
+      border: 1px solid rgba(47, 156, 149, 0.4);
+      color: #c6f2ea;
     }
 
     .main-canvas {
@@ -193,13 +239,13 @@
     }
 
     .stat-value {
-      color: #e0e6ed;
-      font-family: 'Courier New', monospace;
+      color: #e9eef5;
+      font-family: 'IBM Plex Mono', monospace;
       font-weight: 600;
     }
 
     .stat-value.warning {
-      color: #fbbf24;
+      color: #f4b34a;
     }
 
     .stat-value.danger {
@@ -249,7 +295,7 @@
       transform: translate(-50%, -50%);
       text-align: center;
       font-size: 18px;
-      color: #60a5fa;
+      color: #2f9c95;
     }
 
     .data-status {
@@ -259,8 +305,8 @@
     }
 
     .spinner {
-      border: 3px solid rgba(96, 165, 250, 0.1);
-      border-top: 3px solid #60a5fa;
+      border: 3px solid rgba(47, 156, 149, 0.1);
+      border-top: 3px solid #2f9c95;
       border-radius: 50%;
       width: 40px;
       height: 40px;
@@ -313,6 +359,19 @@
   </style>
 </head>
 <body>
+  <nav>
+    <div class="nav-container">
+      <div class="logo">Gravity Trade Analysis</div>
+      <ul>
+        <li><a href="landing.html">Home</a></li>
+        <li><a href="index.html">Tool</a></li>
+        <li><a href="topology.html">Topology</a></li>
+        <li><a href="advanced_topology.html">Research Lab</a></li>
+        <li><a href="methodology.html">Methodology</a></li>
+        <li><a href="https://github.com/ihelfrich/test_repo">GitHub</a></li>
+      </ul>
+    </div>
+  </nav>
   <div class="container">
     <div class="sidebar">
       <h1>Topological Trade Dynamics</h1>

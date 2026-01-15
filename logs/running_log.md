@@ -559,3 +559,4 @@ Full Methodology (Technical Depth)
 - 2026-01-15 01:15:44 -0600: Regenerated visualization payload with all four models (including Head-Mayer exporter/importer-year FE) using top-20 exporters/importers (5,848 rows) to keep runtimes manageable.
 - 2026-01-15 02:40:12 -0600: Built data-driven topology fields and wired docs/topology.html to load them with real metrics, display modes, and shock controls (fallback to demo if data missing).
 - 2026-01-15 03:10:02 -0600: Added dynamic model insight and dyad explanation panels to the gravity explorer with live coefficient interpretation and partial contribution breakdowns.
+- 2026-01-15 03:48:22 -0600: Built research summary pipeline and data-driven Research Lab page, updated navigation, and aligned topology/landing aesthetics with the main palette.

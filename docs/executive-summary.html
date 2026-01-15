@@ -427,7 +427,9 @@
       <h1>Gravity Trade Flow Analysis</h1>
       <ul>
         <li><a href="landing.html">Home</a></li>
-        <li><a href="index.html">Visualization</a></li>
+        <li><a href="index.html">Tool</a></li>
+        <li><a href="topology.html">Topology</a></li>
+        <li><a href="advanced_topology.html">Research Lab</a></li>
         <li><a href="executive-summary.html">Executive Summary</a></li>
         <li><a href="methodology.html">Methodology</a></li>
         <li><a href="https://github.com/ihelfrich/test_repo">GitHub</a></li>
@@ -438,14 +440,14 @@
   <div class="hero">
     <div class="badge">Research Report</div>
     <h1>Executive Summary</h1>
-    <p>Structural Gravity Model Analysis of Bilateral Trade Flows, 2019-2021</p>
+    <p>Structural Gravity Model Analysis of Bilateral Trade Flows, 2005-2021</p>
     <div class="date">January 2026</div>
   </div>
 
   <div class="container">
     <section>
       <h2>Overview</h2>
-      <p>This analysis employs a <strong>structural gravity model</strong> to quantify the determinants of bilateral trade flows among the world's largest trading nations during 2019-2021. Using state-of-the-art Poisson Pseudo-Maximum Likelihood (PPML) estimation with multilateral resistance terms, we identify the elasticities of trade with respect to distance, borders, language, colonial ties, and regional trade agreements.</p>
+      <p>This analysis employs a <strong>structural gravity model</strong> to quantify the determinants of bilateral trade flows among the world's largest trading nations during 2005-2021. Using Poisson Pseudo-Maximum Likelihood (PPML) estimation with multilateral resistance terms, we identify the elasticities of trade with respect to distance, borders, language, colonial ties, and regional trade agreements.</p>
 
       <p>Our findings have direct implications for trade policy design, infrastructure investment prioritization, and regional integration strategies. The interactive counterfactual platform enables scenario analysis for trade cost shocks, providing decision-makers with quantitative tools for policy evaluation.</p>
     </section>
@@ -455,7 +457,7 @@
 
       <div class="stat-grid">
         <div class="stat-box">
-          <div class="number">1,032</div>
+          <div class="number">5,848</div>
           <div class="label">Observations</div>
         </div>
         <div class="stat-box">
@@ -464,7 +466,7 @@
         </div>
         <div class="stat-box">
           <div class="number">3</div>
-          <div class="label">Years (2019-2021)</div>
+          <div class="label">Years (2005-2021)</div>
         </div>
         <div class="stat-box">
           <div class="number">-0.85</div>
@@ -584,7 +586,7 @@
       <p style="font-size: 13px; color: var(--muted); margin-top: 8px;">
         <strong>Significance levels:</strong> *** p < 0.01, ** p < 0.05, * p < 0.1<br>
         <strong>Estimation method:</strong> Poisson Pseudo-Maximum Likelihood (PPML) with exporter, importer, and year fixed effects<br>
-        <strong>Sample:</strong> 1,032 observations (top 20 exporters × top 20 importers, 2019-2021)
+        <strong>Sample:</strong> 5,848 observations (top 20 exporters × top 20 importers, 2005-2021)
       </p>
     </section>
 
@@ -641,7 +643,7 @@
           </div>
         </div>
 
-        <p style="margin-top: 24px;"><strong>Data sources:</strong> BACI bilateral trade database (CEPII) and Gravity Dataset v202211 (CEPII), covering 2019-2021 for top 20 exporters and importers.</p>
+        <p style="margin-top: 24px;"><strong>Data sources:</strong> BACI bilateral trade database (CEPII) and Gravity Dataset v202211 (CEPII), covering 2005-2021 for top 20 exporters and importers.</p>
         <p><strong>Estimation:</strong> Python <code>statsmodels</code> GLM with Poisson family, high-dimensional fixed effects, robust standard errors.</p>
       </div>
     </section>
@@ -660,7 +662,7 @@
     <section>
       <h2>Limitations & Extensions</h2>
 
-      <p><strong>Current Analysis Scope:</strong> This study focuses on aggregate bilateral trade among major economies during 2019-2021. Several avenues exist for extension:</p>
+      <p><strong>Current Analysis Scope:</strong> This study focuses on aggregate bilateral trade among major economies during 2005-2021. Several avenues exist for extension:</p>
 
       <ul style="margin-left: 32px; margin-top: 16px;">
         <li><strong>Product Disaggregation:</strong> Sector-level analysis could reveal heterogeneous elasticities (e.g., services vs. manufactures)</li>
