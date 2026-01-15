@@ -1,38 +1,31 @@
 #!/usr/bin/env python3
 """
-Novel Methodological Contributions
-===========================================================
+Methodological Tools for Gravity Model Analysis
+================================================
 
-This module implements genuinely novel methodologies that advance the
-state-of-the-art in gravity model estimation and validation.
+This module implements methodological approaches for gravity model
+estimation and validation.
 
-CONTRIBUTION 1: Spatial Cross-Validation for Gravity Models
------------------------------------------------------------
-Standard cross-validation randomly splits data, causing data leakage in
-gravity models due to country fixed effects. We propose splitting by
-geographic regions to test true out-of-sample prediction.
+Spatial Cross-Validation for Gravity Models
+--------------------------------------------
+Standard cross-validation randomly splits data, which can cause data leakage in
+gravity models due to country fixed effects. Spatial CV splits by geographic
+regions to test true out-of-sample prediction.
 
-CONTRIBUTION 2: Adaptive Learning Rates for PPML
-------------------------------------------------
-Traditional PPML uses fixed step sizes. We implement adaptive learning
-rates that accelerate convergence (especially for GPU implementation).
+Adaptive Learning Rates for PPML
+---------------------------------
+Traditional PPML uses fixed step sizes. Adaptive learning rates can
+accelerate convergence for iterative estimation.
 
-CONTRIBUTION 3: Counterfactual Confidence Intervals
----------------------------------------------------
-Most gravity counterfactuals report point estimates. We provide bootstrap
-confidence intervals for welfare effects.
+Counterfactual Confidence Intervals
+------------------------------------
+Bootstrap confidence intervals for welfare effects in counterfactual analysis,
+providing uncertainty quantification beyond point estimates.
 
-CONTRIBUTION 4: Trade Flow Imputation via Matrix Completion
------------------------------------------------------------
-Missing trade flows (zeros) are problematic. We use matrix completion
-techniques from machine learning to impute missing bilateral flows.
-
-These contributions are publishable in top journals:
-- Journal of International Economics
-- Review of Economics and Statistics
-- Econometrica (if theory strong enough)
-
-Author: Dr. Ian Helfrich
+Trade Flow Imputation via Matrix Completion
+--------------------------------------------
+Matrix completion techniques for imputing missing bilateral trade flows,
+drawing on machine learning approaches.
 """
 
 import numpy as np
@@ -79,10 +72,10 @@ class SpatialCrossValidator:
     This answers: "How well does the model predict trade in regions
     not used for estimation?"
 
-    Research Contribution:
-    - First application of spatial CV to gravity models
+    Key Features:
+    - Application of spatial CV to gravity models
     - Provides honest assessment of out-of-sample performance
-    - Publishable in Journal of International Economics
+    - Prevents data leakage from fixed effects structure
 
     Example:
         >>> cv = SpatialCrossValidator(n_folds=5)
@@ -538,25 +531,21 @@ def export_methodology_paper_draft():
         f.write(paper)
 
     print(f"✓ Methodology paper draft exported to {output_path}")
-    print("  This is publishable in Journal of International Economics or Review of Economics and Statistics")
-    print("  Estimated citations: 50-100 within 3 years")
 
 
 # Example usage
 if __name__ == "__main__":
     print("="*70)
-    print("NOVEL METHODOLOGICAL CONTRIBUTIONS")
-    print("Dr. Ian Helfrich - Methodological Contributions")
+    print("METHODOLOGICAL TOOLS FOR GRAVITY MODELS")
+    print("Spatial Cross-Validation and Bootstrap Inference")
     print("="*70)
 
     # Generate methodology paper draft
     export_methodology_paper_draft()
 
     print("\n" + "="*70)
-    print("These innovations position you as a methodological leader.")
-    print("Expected impact:")
-    print("  - 2-3 publications in top journals")
-    print("  - 50-100 citations within 3 years")
-    print("  - Platform adopted by 10+ universities")
-    print("  - Mentioned in WTO/IMF/World Bank reports")
+    print("These methods address key validation challenges:")
+    print("  - Out-of-sample prediction accuracy")
+    print("  - Uncertainty quantification in counterfactuals")
+    print("  - Applicable to trade, migration, FDI models")
     print("="*70)
