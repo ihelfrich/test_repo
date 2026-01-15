@@ -151,6 +151,17 @@
       font-family: inherit;
     }
 
+    .api-input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(233, 238, 245, 0.12);
+      background: #0f1825;
+      color: var(--ink);
+      font-family: inherit;
+      margin-bottom: 12px;
+    }
+
     input[type="range"] {
       -webkit-appearance: none;
       height: 4px;
@@ -216,6 +227,8 @@
     }
 
     #map {
+      position: relative;
+      z-index: 0;
       width: 100%;
       height: 100%;
       min-height: 60vh;
@@ -306,12 +319,26 @@
         </select>
 
         <label>Top flows <span id="topNLabel">150</span></label>
-        <input type="range" id="topN" min="25" max="300" step="25" value="150" />
+        <input type="range" id="topN" min="25" max="800" step="25" value="150" />
         <div class="value">Top N dyads per year.</div>
 
         <label>Min trade (USD M) <span id="minTradeLabel">1000</span></label>
         <input type="range" id="minTrade" min="0" max="20000" step="250" value="1000" />
         <div class="value">Filter out small flows for clarity.</div>
+      </div>
+
+      <div class="panel">
+        <h2>Data Source</h2>
+        <label>Mode</label>
+        <select id="dataMode">
+          <option value="static" selected>Static sample (fast)</option>
+          <option value="api">Live API (full dataset)</option>
+        </select>
+        <label>API URL</label>
+        <input class="api-input" id="apiUrl" type="text" value="http://localhost:8000" />
+        <div class="note">
+          API mode requires the local backend (see backend/README.md). Static mode uses the bundled sample.
+        </div>
       </div>
 
       <div class="panel">
@@ -346,7 +373,7 @@
           <div class="legend-color"></div>
           <span>Higher trade volume</span>
         </div>
-        <div class="legend-row">
+        <div class="legend-row" id="residualLegend">
           <div class="legend-color" style="background: linear-gradient(90deg, #f97316, #2f9c95);"></div>
           <span>Residuals: negative → positive</span>
         </div>
@@ -379,6 +406,8 @@
     const countryCount = document.getElementById('countryCount');
     const metricRange = document.getElementById('metricRange');
     const dataNote = document.getElementById('dataNote');
+    const dataMode = document.getElementById('dataMode');
+    const apiUrl = document.getElementById('apiUrl');
 
     const map = L.map('map', { zoomControl: false }).setView([20, 0], 2);
     L.control.zoom({ position: 'bottomright' }).addTo(map);
@@ -393,6 +422,8 @@
     let centroids = {};
     let tradeRows = [];
     let yearIndex = new Map();
+    let centroidsReady = false;
+    let geoLayer = null;
 
     const metricMeta = {
       trade_value_usd_millions: { label: 'Observed trade (USD M)', diverging: false },
@@ -449,16 +480,82 @@
       });
     }
 
-    function updateMap() {
+    function setMetricAvailability(rows) {
+      const hasPred = rows.some(row => row.trade_pred !== undefined);
+      const hasResidual = rows.some(row => row.log_trade_gap !== undefined);
+      Array.from(metricSelect.options).forEach(option => {
+        if (option.value === 'trade_pred') option.disabled = !hasPred;
+        if (option.value === 'log_trade_gap') option.disabled = !hasResidual;
+      });
+      if ((!hasPred && metricSelect.value === 'trade_pred') ||
+          (!hasResidual && metricSelect.value === 'log_trade_gap')) {
+        metricSelect.value = 'trade_value_usd_millions';
+      }
+    }
+
+    function getApiBase() {
+      return apiUrl.value.replace(/\/$/, '');
+    }
+
+    async function loadApiYears() {
+      const response = await fetch(`${getApiBase()}/years`, { cache: 'no-store' });
+      if (!response.ok) throw new Error(`API years error ${response.status}`);
+      const payload = await response.json();
+      const years = payload.years || [];
+      yearSelect.innerHTML = '';
+      years.forEach(year => {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        yearSelect.appendChild(option);
+      });
+      yearSelect.value = years[years.length - 1];
+      yearLabel.textContent = yearSelect.value;
+      return years;
+    }
+
+    async function fetchApiFlows(year, limit) {
+      const response = await fetch(`${getApiBase()}/flows?year=${year}&limit=${limit}`, { cache: 'no-store' });
+      if (!response.ok) throw new Error(`API flows error ${response.status}`);
+      const payload = await response.json();
+      return (payload.rows || []).map(row => ({
+        ...row,
+        trade_value_usd_millions: Number(row.trade_value_usd_millions)
+      }));
+    }
+
+    async function updateMap() {
       const year = parseInt(yearSelect.value, 10);
       const metricKey = metricSelect.value;
       const minTrade = parseFloat(minTradeSlider.value);
       const topN = parseInt(topNSlider.value, 10);
-      const rows = yearIndex.get(year) || [];
+      let rows = yearIndex.get(year) || [];
+
+      if (!Number.isFinite(year)) {
+        dataNote.textContent = 'No year available for the selected source.';
+        return;
+      }
+
+      if (dataMode.value === 'api') {
+        dataNote.textContent = 'Fetching live flows…';
+        const fetchLimit = Math.max(topN * 4, 400);
+        rows = await fetchApiFlows(year, fetchLimit);
+        setMetricAvailability(rows);
+      }
 
       yearLabel.textContent = year;
       topNLabel.textContent = topN;
       minTradeLabel.textContent = minTrade;
+
+      const resolvedMetric = rows.length && rows[0][metricKey] !== undefined
+        ? metricKey
+        : 'trade_value_usd_millions';
+      if (resolvedMetric !== metricKey) {
+        metricSelect.value = resolvedMetric;
+      }
+
+      const residualLegend = document.getElementById('residualLegend');
+      residualLegend.style.display = resolvedMetric === 'log_trade_gap' ? 'flex' : 'none';
 
       const filtered = rows.filter(row =>
         row.trade_value_usd_millions >= minTrade &&
@@ -467,14 +564,14 @@
       );
 
       const metricValues = filtered.map(row => {
-        const val = row[metricKey] ?? 0;
-        return metricKey === 'log_trade_gap' ? Math.abs(val) : val;
+        const val = row[resolvedMetric] ?? 0;
+        return resolvedMetric === 'log_trade_gap' ? Math.abs(val) : val;
       });
       const maxVal = metricValues.length ? Math.max(...metricValues) : 1;
 
       const sorted = filtered.slice().sort((a, b) => {
-        const va = metricKey === 'log_trade_gap' ? Math.abs(a[metricKey]) : a[metricKey];
-        const vb = metricKey === 'log_trade_gap' ? Math.abs(b[metricKey]) : b[metricKey];
+        const va = resolvedMetric === 'log_trade_gap' ? Math.abs(a[resolvedMetric]) : a[resolvedMetric];
+        const vb = resolvedMetric === 'log_trade_gap' ? Math.abs(b[resolvedMetric]) : b[resolvedMetric];
         return (vb || 0) - (va || 0);
       });
 
@@ -496,10 +593,10 @@
         const dest = centroids[row.iso_d];
         if (!origin || !dest) return;
 
-        const rawVal = row[metricKey] ?? 0;
-        const scaleVal = metricKey === 'log_trade_gap' ? Math.abs(rawVal) : rawVal;
+        const rawVal = row[resolvedMetric] ?? 0;
+        const scaleVal = resolvedMetric === 'log_trade_gap' ? Math.abs(rawVal) : rawVal;
         const weight = 1 + 5 * Math.sqrt(scaleVal / maxVal);
-        const color = metricKey === 'log_trade_gap'
+        const color = resolvedMetric === 'log_trade_gap'
           ? (rawVal >= 0 ? '#2f9c95' : '#f97316')
           : '#2f9c95';
 
@@ -511,7 +608,7 @@
         });
 
         line.bindTooltip(
-          `${row.iso_o} → ${row.iso_d}<br>${metricMeta[metricKey].label}: ${formatNumber(rawVal, 2)}`,
+          `${row.iso_o} → ${row.iso_d}<br>${metricMeta[resolvedMetric].label}: ${formatNumber(rawVal, 2)}`,
           { sticky: true }
         );
         line.addTo(flowLayer);
@@ -544,6 +641,10 @@
       } else {
         metricRange.textContent = '-';
       }
+
+      if (dataMode.value === 'api') {
+        dataNote.textContent = `Live API · ${flows.length} flows · ${year}`;
+      }
     }
 
     async function loadCentroids() {
@@ -567,7 +668,10 @@
       const codeMap = isoMap.codes || {};
 
       centroids = {};
-      const geoLayer = L.geoJSON(features, {
+      if (geoLayer) {
+        map.removeLayer(geoLayer);
+      }
+      geoLayer = L.geoJSON(features, {
         style: {
           color: '#2a3a52',
           weight: 1,
@@ -595,10 +699,17 @@
         }
       });
 
+      centroidsReady = true;
       return geoLayer;
     }
 
     async function loadTradeData() {
+      if (dataMode.value === 'api') {
+        await loadApiYears();
+        dataNote.textContent = 'Live API mode: loading flows per year.';
+        return;
+      }
+
       const response = await fetch(dataUrl, { cache: 'no-store' });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const payload = await response.json();
@@ -614,6 +725,7 @@
       });
       yearSelect.value = years[years.length - 1];
       buildYearIndex(tradeRows);
+      setMetricAvailability(tradeRows);
       dataNote.textContent = `Source: ${payload.meta?.source || 'BACI viz sample'} · ${tradeRows.length.toLocaleString()} flows`;
     }
 
@@ -626,30 +738,41 @@
         return;
       }
 
-      let centroidsReady = false;
-      try {
-        await loadCentroids();
-        centroidsReady = true;
-      } catch (err) {
-        console.warn('Centroid load failed', err);
-        dataNote.textContent = 'Base map unavailable; showing trade totals only.';
+      if (!centroidsReady) {
+        try {
+          await loadCentroids();
+        } catch (err) {
+          console.warn('Centroid load failed', err);
+          dataNote.textContent = 'Base map unavailable; showing trade totals only.';
+        }
       }
 
-      updateMap();
+      await updateMap();
       if (centroidsReady) {
         map.invalidateSize();
       }
     }
 
-    yearSelect.addEventListener('change', updateMap);
-    metricSelect.addEventListener('change', updateMap);
+    yearSelect.addEventListener('change', () => { void updateMap(); });
+    metricSelect.addEventListener('change', () => { void updateMap(); });
     topNSlider.addEventListener('input', () => {
       topNLabel.textContent = topNSlider.value;
-      updateMap();
+      void updateMap();
     });
     minTradeSlider.addEventListener('input', () => {
       minTradeLabel.textContent = minTradeSlider.value;
-      updateMap();
+      void updateMap();
+    });
+    dataMode.addEventListener('change', () => {
+      yearSelect.innerHTML = '';
+      tradeRows = [];
+      yearIndex = new Map();
+      void init();
+    });
+    apiUrl.addEventListener('change', () => {
+      if (dataMode.value === 'api') {
+        void init();
+      }
     });
 
     window.addEventListener('resize', () => map.invalidateSize());

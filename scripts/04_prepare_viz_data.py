@@ -76,7 +76,12 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--start-year", type=int, default=2005)
     parser.add_argument("--end-year", type=int, default=2022)
-    parser.add_argument("--top-n", type=int, default=30)
+    parser.add_argument(
+        "--top-n",
+        type=int,
+        default=30,
+        help="Top N exporters/importers to keep (set 0 for all countries).",
+    )
     parser.add_argument(
         "--models",
         default="all",
@@ -152,52 +157,76 @@ def main() -> None:
     out_arrow.parent.mkdir(parents=True, exist_ok=True)
 
     con = duckdb.connect()
-    query = f"""
-        with base as (
-            select year, iso_o, iso_d, trade_value_usd_millions
-            from read_parquet('{args.baci}')
-            where year between {args.start_year} and {args.end_year}
-        ),
-        top_exporters as (
-            select iso_o, sum(trade_value_usd_millions) as total_trade
-            from base
-            group by iso_o
-            order by total_trade desc
-            limit {args.top_n}
-        ),
-        top_importers as (
-            select iso_d, sum(trade_value_usd_millions) as total_trade
-            from base
-            group by iso_d
-            order by total_trade desc
-            limit {args.top_n}
-        ),
-        filtered as (
-            select *
-            from base
-            where iso_o in (select iso_o from top_exporters)
-              and iso_d in (select iso_d from top_importers)
-        )
-        select
-            f.year,
-            f.iso_o,
-            f.iso_d,
-            f.trade_value_usd_millions,
-            g.dist,
-            g.contig,
-            g.comlang_off,
-            g.comcol,
-            g.rta_coverage,
-            g.gdp_o,
-            g.gdp_d,
-            g.pop_o,
-            g.pop_d
-        from filtered f
-        left join read_parquet('{args.gravity}') g
-          on f.year = g.year
-         and f.iso_o = g.iso3_o
-         and f.iso_d = g.iso3_d
-    """
+    if args.top_n and args.top_n > 0:
+        query = f"""
+            with base as (
+                select year, iso_o, iso_d, trade_value_usd_millions
+                from read_parquet('{args.baci}')
+                where year between {args.start_year} and {args.end_year}
+            ),
+            top_exporters as (
+                select iso_o, sum(trade_value_usd_millions) as total_trade
+                from base
+                group by iso_o
+                order by total_trade desc
+                limit {args.top_n}
+            ),
+            top_importers as (
+                select iso_d, sum(trade_value_usd_millions) as total_trade
+                from base
+                group by iso_d
+                order by total_trade desc
+                limit {args.top_n}
+            ),
+            filtered as (
+                select *
+                from base
+                where iso_o in (select iso_o from top_exporters)
+                  and iso_d in (select iso_d from top_importers)
+            )
+            select
+                f.year,
+                f.iso_o,
+                f.iso_d,
+                f.trade_value_usd_millions,
+                g.dist,
+                g.contig,
+                g.comlang_off,
+                g.comcol,
+                g.rta_coverage,
+                g.gdp_o,
+                g.gdp_d,
+                g.pop_o,
+                g.pop_d
+            from filtered f
+            left join read_parquet('{args.gravity}') g
+              on f.year = g.year
+             and f.iso_o = g.iso3_o
+             and f.iso_d = g.iso3_d
+        """
+    else:
+        query = f"""
+            select
+                f.year,
+                f.iso_o,
+                f.iso_d,
+                f.trade_value_usd_millions,
+                g.dist,
+                g.contig,
+                g.comlang_off,
+                g.comcol,
+                g.rta_coverage,
+                g.gdp_o,
+                g.gdp_d,
+                g.pop_o,
+                g.pop_d
+            from read_parquet('{args.baci}') f
+            left join read_parquet('{args.gravity}') g
+              on f.year = g.year
+             and f.iso_o = g.iso3_o
+             and f.iso_d = g.iso3_d
+            where f.year between {args.start_year} and {args.end_year}
+        """
     df = con.execute(query).df()
 
     required = [
@@ -309,7 +338,7 @@ def main() -> None:
         "meta": {
             "source": "BACI bilateral totals + CEPII gravity v202211",
             "years": sorted(df_out["year"].unique().tolist()),
-            "top_n": args.top_n,
+            "top_n": args.top_n if args.top_n and args.top_n > 0 else "all",
             "model": model_meta[default_model_key]["label"],
             "default_model": default_model_key,
             "models": model_meta,

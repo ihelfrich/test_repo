@@ -570,3 +570,4 @@ Full Methodology (Technical Depth)
 - 2026-01-15 15:03:36 -0600: Rebuilt ISO numeric map using gravity_countries (matches world atlas IDs); switched Policy Lab to partial-equilibrium counterfactuals with target/bilateral metrics; fixed map legend z-index.
 - 2026-01-15 15:20:58 -0600: Added cache-busting query params to Trade Map and Policy Lab nav links to avoid stale HTML in GitHub Pages cache.
 - 2026-01-15 15:22:40 -0600: Added Interpretation Guide page with data/model/visualization explanations and linked it across navigation.
+- 2026-01-15 16:10:16 -0600: Stabilized Policy Lab welfare baseline (exclude zero-import countries), added total trade change, updated solver summary text. Trade Map now supports optional API mode for full-country data, expanded Top N range, and tightened layer stacking. Topology page retitled to data-driven residual field, guide updated with API usage notes, and viz prep script supports --top-n 0 for all countries.

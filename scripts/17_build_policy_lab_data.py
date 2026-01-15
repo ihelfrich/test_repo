@@ -4,7 +4,7 @@ Build Policy Lab data payload for GE-style counterfactuals.
 
 Creates a compact JSON with baseline trade flows, export/import shares,
 and country metadata. The Policy Lab UI runs counterfactual scenarios
-client-side for fast iteration on the top-20 sample.
+client-side for fast iteration on the current sample.
 """
 
 import argparse
@@ -68,7 +68,7 @@ def main() -> None:
             "years": [int(y) for y in years],
             "countries": countries,
             "country_names": name_map,
-            "note": "Baseline uses predicted trade from the default model on top-20 sample.",
+            "note": "Baseline uses predicted trade from the default model; sample size depends on the input dataset.",
         },
         "by_year": {}
     }

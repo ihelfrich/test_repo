@@ -277,6 +277,10 @@
         <li>Use <strong>Min trade</strong> to remove noise.</li>
         <li>Residuals use a diverging color scale (negative → positive).</li>
       </ul>
+      <div class="callout">
+        For full country coverage, switch the Trade Map to Live API mode and run the backend
+        (see backend/README.md). Static mode uses the bundled sample for fast loading.
+      </div>
     </section>
 
     <section id="sphere">
@@ -305,21 +309,17 @@
     <section id="topology">
       <h2>Topology Signals</h2>
       <p>
-        The field is built from residuals and then evolved with a stylized PDE to illustrate
-        how clustering and fragmentation could propagate through the trade system.
-        The “β₀” and “β₁” summaries are coarse topology indicators derived from thresholding the field.
+        The field is built directly from gravity residuals. Each dyad contributes its residual
+        to a 2D grid (using MDS midpoints and bilinear weights), then we smooth the grid to make
+        spatial structure visible. There is no simulated dynamics in the current version.
       </p>
       <div class="math">
-        ∂<sub>t</sub> y = κ Δy + λ T(y) − α y³
+        field(x, y) = Σ dyads w<sub>ij</sub>(x, y) · log_trade_gap<sub>ij</sub>
       </div>
-      <ul>
-        <li><strong>κ</strong> (diffusion): smooths residual clusters.</li>
-        <li><strong>λ</strong> (topology): amplifies neighborhood structure.</li>
-        <li><strong>α</strong> (congestion): penalizes extreme amplitudes.</li>
-      </ul>
       <p>
-        This is a visualization tool, not a calibrated structural dynamic model.
-        The data‑driven part is the field itself; the evolution is pedagogical.
+        Interpret the field as a map of “over‑trade” (positive values) and “under‑trade”
+        (negative values) relative to the gravity model. Gradient magnitude highlights sharp
+        transitions in the residual landscape.
       </p>
     </section>
 
@@ -350,8 +350,11 @@
       </div>
       <p>
         Use this for rapid scenario intuition (tariff changes, bilateral cost reductions).
-        A full GE solver is the next step for research‑grade welfare analysis.
+        For full GE results, switch the Policy Lab solver to the API mode and run the backend.
       </p>
+      <div class="callout">
+        Welfare summaries exclude zero‑import countries from the average to avoid artificial bias.
+      </div>
     </section>
   </div>
 </body>

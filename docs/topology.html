@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Topological Trade Dynamics - Phase Transition Detector</title>
+  <title>Trade Residual Field Explorer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
@@ -407,41 +407,14 @@
   </nav>
   <div class="container">
     <div class="sidebar">
-      <h1>Topological Trade Dynamics</h1>
+      <h1>Trade Residual Field</h1>
       <p class="subtitle">
-        Real-time phase transition detection using field theory PDEs + persistent homology
+        Data-driven residual fields from the gravity model. No simulated dynamics—just the empirical
+        structure of over- and under-trade across years.
       </p>
 
       <div class="panel">
-        <h2>Field Parameters</h2>
-
-        <label>
-          κ (Diffusion) <span class="info-badge" title="Smoothness of trade patterns">?</span>
-        </label>
-        <input type="range" id="kappa" min="0.0001" max="0.01" step="0.0001" value="0.001">
-        <div class="value-display" id="kappa-val">0.001</div>
-
-        <label>
-          λ (Topology) <span class="info-badge" title="Strength of network clustering">?</span>
-        </label>
-        <input type="range" id="lambda" min="0" max="0.5" step="0.01" value="0.15">
-        <div class="value-display" id="lambda-val">0.15</div>
-
-        <label>
-          α (Congestion) <span class="info-badge" title="Trade saturation penalty">?</span>
-        </label>
-        <input type="range" id="alpha" min="0.1" max="5" step="0.1" value="1.0">
-        <div class="value-display" id="alpha-val">1.0</div>
-
-        <label>
-          Time Step (Δt)
-        </label>
-        <input type="range" id="dt" min="0.001" max="0.05" step="0.001" value="0.01">
-        <div class="value-display" id="dt-val">0.01</div>
-      </div>
-
-      <div class="panel">
-        <h2>Shock Scenario</h2>
+        <h2>Data Slice</h2>
 
         <label>Year</label>
         <select id="year">
@@ -454,31 +427,6 @@
           <option value="2021">2021</option>
         </select>
         <div class="data-status" id="data-status">Loading field data…</div>
-
-        <label>Shock Type</label>
-        <select id="shock-type">
-          <option value="none">No Shock (Equilibrium)</option>
-          <option value="random">Random Perturbation</option>
-          <option value="localized">Localized (Region)</option>
-          <option value="china">China Supply Shock</option>
-          <option value="us-tariff">US Tariff Increase</option>
-          <option value="brexit">Brexit Scenario</option>
-        </select>
-
-        <label>Shock Magnitude (σ)</label>
-        <input type="range" id="shock-mag" min="0" max="3" step="0.1" value="0">
-        <div class="value-display" id="shock-mag-val">0.0</div>
-      </div>
-
-      <div class="panel">
-        <h2>Evolution</h2>
-
-        <label>Steps</label>
-        <input type="range" id="steps" min="10" max="500" step="10" value="100">
-        <div class="value-display" id="steps-val">100</div>
-
-        <button id="evolve-btn">▶ Evolve System</button>
-        <button id="reset-btn" class="secondary">↻ Reset to Equilibrium</button>
       </div>
 
       <div class="panel">
@@ -497,11 +445,7 @@
         <select id="display-mode">
           <option value="field">Field Intensity</option>
           <option value="gradient">Gradient Magnitude</option>
-          <option value="laplacian">Laplacian</option>
-          <option value="energy">Energy Density</option>
         </select>
-
-        <button id="export-btn" class="secondary">↓ Export Data</button>
       </div>
     </div>
 
@@ -509,34 +453,22 @@
       <canvas id="canvas"></canvas>
 
       <div class="stats">
-        <h3>System Diagnostics</h3>
+        <h3>Field Diagnostics</h3>
         <div class="stat-row">
-          <span class="stat-label">Energy:</span>
-          <span class="stat-value" id="energy">-</span>
-        </div>
-        <div class="stat-row">
-          <span class="stat-label">dE/dt:</span>
-          <span class="stat-value" id="energy-rate">-</span>
-        </div>
-        <div class="stat-row">
-          <span class="stat-label">Autocorrelation:</span>
-          <span class="stat-value" id="autocorr">-</span>
+          <span class="stat-label">Mean:</span>
+          <span class="stat-value" id="field-mean">-</span>
         </div>
         <div class="stat-row">
           <span class="stat-label">Variance:</span>
           <span class="stat-value" id="variance">-</span>
         </div>
         <div class="stat-row">
-          <span class="stat-label">β₀ (Components):</span>
-          <span class="stat-value" id="betti-0">-</span>
+          <span class="stat-label">Min:</span>
+          <span class="stat-value" id="field-min">-</span>
         </div>
         <div class="stat-row">
-          <span class="stat-label">β₁ (Cycles):</span>
-          <span class="stat-value" id="betti-1">-</span>
-        </div>
-        <div class="stat-row">
-          <span class="stat-label">Warning Level:</span>
-          <span class="stat-value" id="warning">LOW</span>
+          <span class="stat-label">Max:</span>
+          <span class="stat-value" id="field-max">-</span>
         </div>
       </div>
 
@@ -544,16 +476,16 @@
         <h4>Field Interpretation</h4>
         <div class="legend-item">
           <div class="legend-color" style="background: linear-gradient(90deg, #440154, #fde724);"></div>
-          <span>Low → High Trade Intensity</span>
+          <span>Low → High Residual (over-trade)</span>
         </div>
         <div class="legend-item" style="margin-top: 12px; font-size: 10px; color: #94a3b8;">
-          Patterns indicate clustering, phase transitions, and critical slowing down before network fragmentation.
+          Residual field constructed from gravity gaps (log actual − log predicted) on a 2D grid.
         </div>
       </div>
 
       <div class="loading" id="loading" style="display: none;">
         <div class="spinner"></div>
-        <div>Evolving field dynamics...</div>
+        <div>Loading field data…</div>
       </div>
     </div>
   </div>
@@ -573,14 +505,6 @@
     let useDataField = false;
     let fieldsByYear = {};
     let metaInfo = null;
-    let prevField = null;
-    let prevEnergy = null;
-    let params = {
-      kappa: 0.001,
-      lambda: 0.15,
-      alpha: 1.0,
-      dt: 0.01
-    };
 
     // Initialize canvas
     function resizeCanvas() {
@@ -599,8 +523,6 @@
       if (!payload || !payload.grid) return false;
       field = payload.grid.map(row => row.map(Number));
       gridSize = field.length;
-      prevField = null;
-      prevEnergy = null;
       return true;
     }
 
@@ -613,8 +535,6 @@
           field[i][j] = (Math.random() - 0.5) * 0.5;
         }
       }
-      prevField = null;
-      prevEnergy = null;
     }
 
     async function loadFieldData() {
@@ -737,14 +657,6 @@
       return `rgb(${r},${g},${b})`;
     }
 
-    function laplacianAt(source, i, j) {
-      const im = (i - 1 + gridSize) % gridSize;
-      const ip = (i + 1) % gridSize;
-      const jm = (j - 1 + gridSize) % gridSize;
-      const jp = (j + 1) % gridSize;
-      return source[ip][j] + source[im][j] + source[i][jp] + source[i][jm] - 4 * source[i][j];
-    }
-
     function gradientMagnitude(source, i, j) {
       const im = (i - 1 + gridSize) % gridSize;
       const ip = (i + 1) % gridSize;
@@ -765,11 +677,6 @@
         for (let j = 0; j < gridSize; j++) {
           if (mode === "gradient") {
             derived[i][j] = gradientMagnitude(field, i, j);
-          } else if (mode === "laplacian") {
-            derived[i][j] = laplacianAt(field, i, j);
-          } else if (mode === "energy") {
-            const grad = gradientMagnitude(field, i, j);
-            derived[i][j] = 0.5 * params.kappa * grad * grad + 0.25 * params.alpha * Math.pow(field[i][j], 4);
           } else {
             derived[i][j] = field[i][j];
           }
@@ -778,233 +685,34 @@
       return derived;
     }
 
-    // Evolve field (simplified)
-    function applyShock(type, magnitude) {
-      if (!magnitude || magnitude === 0) return;
-      const centerMap = {
-        localized: [0.5, 0.5],
-        china: [0.72, 0.38],
-        "us-tariff": [0.25, 0.62],
-        brexit: [0.55, 0.72],
-      };
-      if (type === "random") {
-        for (let i = 0; i < gridSize; i++) {
-          for (let j = 0; j < gridSize; j++) {
-            field[i][j] += (Math.random() - 0.5) * 0.2 * magnitude;
-          }
-        }
-        return;
-      }
-      if (!centerMap[type]) return;
-      const [cx, cy] = centerMap[type];
-      const sigma = Math.max(2, gridSize * 0.08);
-      const cxIdx = cx * (gridSize - 1);
-      const cyIdx = cy * (gridSize - 1);
-      for (let i = 0; i < gridSize; i++) {
-        for (let j = 0; j < gridSize; j++) {
-          const dx = i - cyIdx;
-          const dy = j - cxIdx;
-          const weight = Math.exp(-(dx * dx + dy * dy) / (2 * sigma * sigma));
-          field[i][j] += magnitude * 0.15 * weight;
-        }
-      }
-    }
-
-    function evolveField(steps) {
-      document.getElementById('loading').style.display = 'block';
-      const shockType = document.getElementById('shock-type').value;
-      const shockMag = parseFloat(document.getElementById('shock-mag').value);
-      if (shockType !== "none") {
-        applyShock(shockType, shockMag);
-      }
-
-      setTimeout(() => {
-        for (let s = 0; s < steps; s++) {
-          const newField = new Array(gridSize);
-          for (let i = 0; i < gridSize; i++) {
-            newField[i] = new Array(gridSize);
-            for (let j = 0; j < gridSize; j++) {
-              const laplacian = laplacianAt(field, i, j);
-              const topo = (
-                -0.05 * field[(i - 1 + gridSize) % gridSize][(j - 1 + gridSize) % gridSize] +
-                -0.1 * field[(i - 1 + gridSize) % gridSize][j] +
-                -0.05 * field[(i - 1 + gridSize) % gridSize][(j + 1) % gridSize] +
-                -0.1 * field[i][(j - 1 + gridSize) % gridSize] +
-                1.0 * field[i][j] +
-                -0.1 * field[i][(j + 1) % gridSize] +
-                -0.05 * field[(i + 1) % gridSize][(j - 1 + gridSize) % gridSize] +
-                -0.1 * field[(i + 1) % gridSize][j] +
-                -0.05 * field[(i + 1) % gridSize][(j + 1) % gridSize]
-              );
-              const rhs = params.kappa * laplacian + params.lambda * topo - params.alpha * Math.pow(field[i][j], 3);
-              newField[i][j] = field[i][j] + params.dt * rhs;
-            }
-          }
-          field = newField;
-
-          if (s % 10 === 0) {
-            updateStats();
-            drawField();
-          }
-        }
-
-        document.getElementById('loading').style.display = 'none';
-        updateStats();
-        drawField();
-      }, 50);
-    }
-
-    function flattenField(source) {
-      const out = [];
-      for (let i = 0; i < gridSize; i++) {
-        for (let j = 0; j < gridSize; j++) {
-          out.push(source[i][j]);
-        }
-      }
-      return out;
-    }
-
-    function correlation(a, b) {
-      if (!a.length || a.length !== b.length) return 0;
-      let meanA = 0;
-      let meanB = 0;
-      for (let i = 0; i < a.length; i++) {
-        meanA += a[i];
-        meanB += b[i];
-      }
-      meanA /= a.length;
-      meanB /= b.length;
-      let num = 0;
-      let denA = 0;
-      let denB = 0;
-      for (let i = 0; i < a.length; i++) {
-        const da = a[i] - meanA;
-        const db = b[i] - meanB;
-        num += da * db;
-        denA += da * da;
-        denB += db * db;
-      }
-      const denom = Math.sqrt(denA * denB) || 1;
-      return num / denom;
-    }
-
-    function countComponents(binary) {
-      const visited = Array.from({ length: gridSize }, () => Array(gridSize).fill(false));
-      const dirs = [[1,0], [-1,0], [0,1], [0,-1]];
-      let count = 0;
-
-      for (let i = 0; i < gridSize; i++) {
-        for (let j = 0; j < gridSize; j++) {
-          if (!binary[i][j] || visited[i][j]) continue;
-          count += 1;
-          const queue = [[i, j]];
-          visited[i][j] = true;
-          while (queue.length) {
-            const [x, y] = queue.pop();
-            for (const [dx, dy] of dirs) {
-              const nx = x + dx;
-              const ny = y + dy;
-              if (nx < 0 || ny < 0 || nx >= gridSize || ny >= gridSize) continue;
-              if (binary[nx][ny] && !visited[nx][ny]) {
-                visited[nx][ny] = true;
-                queue.push([nx, ny]);
-              }
-            }
-          }
-        }
-      }
-      return count;
-    }
-
-    function computeBetti(source) {
-      let mean = 0;
-      for (let i = 0; i < gridSize; i++) {
-        for (let j = 0; j < gridSize; j++) {
-          mean += source[i][j];
-        }
-      }
-      mean /= (gridSize * gridSize);
-      const binary = Array.from({ length: gridSize }, () => Array(gridSize).fill(false));
-      const inverse = Array.from({ length: gridSize }, () => Array(gridSize).fill(false));
-      for (let i = 0; i < gridSize; i++) {
-        for (let j = 0; j < gridSize; j++) {
-          const on = source[i][j] > mean;
-          binary[i][j] = on;
-          inverse[i][j] = !on;
-        }
-      }
-      const beta0 = countComponents(binary);
-      const background = countComponents(inverse);
-      const beta1 = Math.max(background - 1, 0);
-      return { beta0, beta1 };
-    }
-
     function updateStats() {
-      let energy = 0;
-      let mean = 0;
+      let min = Infinity;
+      let max = -Infinity;
+      let sum = 0;
+      const count = gridSize * gridSize;
       for (let i = 0; i < gridSize; i++) {
         for (let j = 0; j < gridSize; j++) {
-          mean += field[i][j];
+          const v = field[i][j];
+          sum += v;
+          min = Math.min(min, v);
+          max = Math.max(max, v);
         }
       }
-      mean /= (gridSize * gridSize);
-
+      const mean = sum / count;
       let variance = 0;
       for (let i = 0; i < gridSize; i++) {
         for (let j = 0; j < gridSize; j++) {
-          const grad = gradientMagnitude(field, i, j);
-          energy += 0.5 * params.kappa * grad * grad + 0.25 * params.alpha * Math.pow(field[i][j], 4);
-          variance += Math.pow(field[i][j] - mean, 2);
+          const diff = field[i][j] - mean;
+          variance += diff * diff;
         }
       }
-      variance /= (gridSize * gridSize);
+      variance /= count;
 
-      const energyRate = prevEnergy === null ? 0 : energy - prevEnergy;
-      prevEnergy = energy;
-      document.getElementById('energy').textContent = energy.toFixed(2);
-      document.getElementById('energy-rate').textContent = energyRate.toFixed(4);
+      document.getElementById('field-mean').textContent = mean.toFixed(4);
       document.getElementById('variance').textContent = variance.toFixed(4);
-
-      const autocorr = prevField ? correlation(flattenField(field), flattenField(prevField)) : 0;
-      document.getElementById('autocorr').textContent = autocorr.toFixed(3);
-      prevField = field.map(row => row.slice());
-
-      const betti = computeBetti(field);
-      document.getElementById('betti-0').textContent = betti.beta0;
-      document.getElementById('betti-1').textContent = betti.beta1;
-
-      const warning = autocorr > 0.7 || variance > 0.1 ? "ELEVATED" : "LOW";
-      document.getElementById('warning').textContent = warning;
+      document.getElementById('field-min').textContent = min.toFixed(4);
+      document.getElementById('field-max').textContent = max.toFixed(4);
     }
-
-    // Event listeners
-    document.getElementById('kappa').addEventListener('input', e => {
-      params.kappa = parseFloat(e.target.value);
-      document.getElementById('kappa-val').textContent = params.kappa.toFixed(4);
-    });
-
-    document.getElementById('lambda').addEventListener('input', e => {
-      params.lambda = parseFloat(e.target.value);
-      document.getElementById('lambda-val').textContent = params.lambda.toFixed(2);
-    });
-
-    document.getElementById('alpha').addEventListener('input', e => {
-      params.alpha = parseFloat(e.target.value);
-      document.getElementById('alpha-val').textContent = params.alpha.toFixed(1);
-    });
-
-    document.getElementById('dt').addEventListener('input', e => {
-      params.dt = parseFloat(e.target.value);
-      document.getElementById('dt-val').textContent = params.dt.toFixed(3);
-    });
-
-    document.getElementById('shock-mag').addEventListener('input', e => {
-      document.getElementById('shock-mag-val').textContent = parseFloat(e.target.value).toFixed(1);
-    });
-
-    document.getElementById('steps').addEventListener('input', e => {
-      document.getElementById('steps-val').textContent = e.target.value;
-    });
 
     yearSelect.addEventListener('change', () => {
       if (useDataField) {
@@ -1019,25 +727,10 @@
     colormapSelect.addEventListener('change', drawField);
     displayMode.addEventListener('change', drawField);
 
-    document.getElementById('evolve-btn').addEventListener('click', () => {
-      const steps = parseInt(document.getElementById('steps').value);
-      evolveField(steps);
-    });
-
-    document.getElementById('reset-btn').addEventListener('click', () => {
-      if (useDataField) {
-        setFieldFromYear(String(yearSelect.value));
-      } else {
-        initField();
-      }
-      drawField();
-      updateStats();
-    });
-
     // Initial draw
     loadFieldData();
 
-    console.log("🌍 Topological Trade Dynamics initialized");
+    console.log("🌍 Trade residual field initialized");
     console.log("Data-backed interface with fallback to synthetic fields");
   </script>
 </body>

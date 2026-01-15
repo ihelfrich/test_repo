@@ -135,6 +135,17 @@
       margin-bottom: 12px;
     }
 
+    input[type="text"] {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(233, 238, 245, 0.12);
+      background: #0f1825;
+      color: var(--ink);
+      font-family: inherit;
+      margin-bottom: 12px;
+    }
+
     select {
       padding: 10px 12px;
       border-radius: 10px;
@@ -337,7 +348,7 @@
     <aside class="sidebar">
       <h1>Policy Lab</h1>
       <p class="subtitle">
-        GE-style counterfactuals on the top-20 sample. Use this to prototype
+        GE-style counterfactuals on the current sample. Use this to prototype
         tariff or RTA shocks before running full-sample estimation.
       </p>
 
@@ -384,11 +395,25 @@
       </div>
 
       <div class="panel">
+        <h2>Solver</h2>
+        <label>Mode</label>
+        <select id="solverMode">
+          <option value="pe" selected>Partial equilibrium (browser)</option>
+          <option value="ge">General equilibrium (API)</option>
+        </select>
+        <label>GE API URL</label>
+        <input type="text" id="apiUrl" value="http://localhost:8000" />
+        <div class="note">
+          GE mode requires the local FastAPI backend to be running. See backend/README.md.
+        </div>
+      </div>
+
+      <div class="panel">
         <h2>Method Notes</h2>
         <div class="note">
           The solver iterates exporter and importer price indices using baseline
           trade shares (structural gravity). Results are illustrative for the
-          top‑20 sample and should be re-estimated on the full dataset for
+          current sample and should be re-estimated on the full dataset for
           publication-grade policy work.
         </div>
       </div>
@@ -416,6 +441,10 @@
         <div class="card">
           <span>Average welfare change</span>
           <strong id="avgWelfare">-</strong>
+        </div>
+        <div class="card">
+          <span>Total trade change</span>
+          <strong id="totalTradeChange">-</strong>
         </div>
       </section>
 
@@ -451,12 +480,15 @@
     const runBtn = document.getElementById('runBtn');
     const dataNote = document.getElementById('dataNote');
     const caseNote = document.getElementById('caseNote');
+    const solverMode = document.getElementById('solverMode');
+    const apiUrl = document.getElementById('apiUrl');
     const statusPill = document.getElementById('statusPill');
     const summaryText = document.getElementById('summaryText');
     const targetImportChange = document.getElementById('targetImportChange');
     const targetExportChange = document.getElementById('targetExportChange');
     const bilateralChange = document.getElementById('bilateralChange');
     const avgWelfare = document.getElementById('avgWelfare');
+    const totalTradeChange = document.getElementById('totalTradeChange');
     const welfareTable = document.getElementById('welfareTable');
 
     let payload = null;
@@ -561,6 +593,73 @@
       return delta;
     }
 
+    function buildShockList(targetIso, partnerIso) {
+      if (scenarioOverride && scenarioOverride.shocks) {
+        return scenarioOverride.shocks.map(shock => ({
+          type: shock.type,
+          rate: shock.rate,
+          target: shock.targetIso || targetIso,
+          partner: shock.partnerIso || partnerIso
+        }));
+      }
+      return [{
+        type: shockType.value,
+        rate: parseFloat(tariffSlider.value) / 100,
+        target: targetIso,
+        partner: partnerIso
+      }];
+    }
+
+    function remapToLocal(apiCountries, targetCountries, data) {
+      if (apiCountries.join(',') === targetCountries.join(',')) {
+        return data;
+      }
+      const idx = {};
+      apiCountries.forEach((iso, i) => { idx[iso] = i; });
+      const remapVec = (vec) => targetCountries.map(iso => vec[idx[iso]] ?? 0);
+      const remapMat = (mat) => targetCountries.map(isoI =>
+        targetCountries.map(isoJ => (mat[idx[isoI]] && mat[idx[isoI]][idx[isoJ]]) ? mat[idx[isoI]][idx[isoJ]] : 0)
+      );
+      return {
+        ...data,
+        exports_base: remapVec(data.exports_base),
+        imports_base: remapVec(data.imports_base),
+        exports_cf: remapVec(data.exports_cf),
+        imports_cf: remapVec(data.imports_cf),
+        flows_base: remapMat(data.flows_base),
+        flows_cf: remapMat(data.flows_cf),
+        welfare: remapVec(data.welfare),
+      };
+    }
+
+    async function runGeSimulation(yearKey, theta, shocks) {
+      const endpoint = apiUrl.value.replace(/\/$/, '') + '/ge_counterfactual';
+      const body = { year: parseInt(yearKey, 10), theta, shocks };
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      if (!response.ok) {
+        throw new Error(`GE API error ${response.status}`);
+      }
+      const data = await response.json();
+      const localCountries = payload.meta.countries || [];
+      const remapped = remapToLocal(data.countries || [], localCountries, data);
+      const results = {
+        exports: remapped.exports_base,
+        imports: remapped.imports_base,
+        exports_cf: remapped.exports_cf,
+        imports_cf: remapped.imports_cf,
+        flows: remapped.flows_base,
+        flows_cf: remapped.flows_cf,
+        welfare: remapped.welfare
+      };
+      const baseline = { welfare: Array(localCountries.length).fill(1) };
+      renderResults(results, theta, baseline);
+      statusPill.textContent = 'GE';
+    }
+
     function solveCounterfactual(yearKey, shock, theta) {
       const yearData = payload.by_year[yearKey];
       const flows = yearData.flows_pred;
@@ -590,9 +689,17 @@
 
       const welfare = Array(n).fill(1);
       for (let j = 0; j < n; j++) {
+        if (imports[j] <= 0) {
+          welfare[j] = 1;
+          continue;
+        }
         let sum = 0;
         for (let i = 0; i < n; i++) {
           sum += importShares[i][j] * phi[i][j];
+        }
+        if (!Number.isFinite(sum) || sum <= 0) {
+          welfare[j] = 1;
+          continue;
         }
         const priceIndex = Math.pow(Math.max(sum, 1e-12), 1 / (1 - theta));
         welfare[j] = 1 / priceIndex;
@@ -617,7 +724,13 @@
 
       const baseWelfare = baseline && baseline.welfare ? baseline.welfare : Array(results.welfare.length).fill(1);
       const welfareChanges = results.welfare.map((value, idx) => (value / Math.max(baseWelfare[idx], 1e-9) - 1) * 100);
-      const avgW = welfareChanges.reduce((a, b) => a + b, 0) / welfareChanges.length;
+      const validMask = results.imports
+        ? results.imports.map(value => value > 0)
+        : Array(welfareChanges.length).fill(true);
+      const validWelfare = welfareChanges.filter((_, idx) => validMask[idx]);
+      const avgW = validWelfare.length
+        ? validWelfare.reduce((a, b) => a + b, 0) / validWelfare.length
+        : 0;
 
       const entries = countries.map((iso, idx) => ({
         iso,
@@ -652,6 +765,10 @@
       targetExportChange.textContent = targetExportDelta;
       bilateralChange.textContent = bilateralDelta;
       avgWelfare.textContent = formatPct(avgW);
+      const totalBase = results.total_trade ?? results.exports.reduce((a, b) => a + b, 0);
+      const totalCf = results.total_trade_cf ?? results.exports_cf.reduce((a, b) => a + b, 0);
+      const totalDelta = (totalCf / Math.max(totalBase, 1e-9) - 1) * 100;
+      totalTradeChange.textContent = formatPct(totalDelta);
 
       const entriesSorted = entries.slice().sort((a, b) => b.welfare - a.welfare);
       welfareTable.innerHTML = '';
@@ -666,7 +783,10 @@
         welfareTable.appendChild(row);
       });
 
-      summaryText.textContent = `Theta ${theta.toFixed(1)} · ${yearSelect.value}. Partial-equilibrium response; full GE solver is queued for the next release.`;
+      const solverLabel = solverMode.value === 'ge'
+        ? 'General equilibrium (API)'
+        : 'Partial equilibrium (browser)';
+      summaryText.textContent = `${solverLabel} · θ=${theta.toFixed(1)} · ${yearSelect.value}.`;
     }
 
     function runSimulation() {
@@ -704,6 +824,20 @@
 
       if (shock.type === 'import_tariff') {
         shock.partner = null;
+      }
+
+      if (solverMode.value === 'ge') {
+        const shocks = buildShockList(targetIso, partnerIso);
+        runGeSimulation(yearKey, theta, shocks)
+          .catch(err => {
+            console.warn('GE simulation failed', err);
+            statusPill.textContent = 'Error';
+            summaryText.textContent = 'GE API failed. Check API URL and backend status.';
+          })
+          .finally(() => {
+            runBtn.disabled = false;
+          });
+        return;
       }
 
       if (!scenarioOverride && (shock.type === 'bilateral_tariff' || shock.type === 'rta')) {
@@ -898,6 +1032,8 @@
       runSimulation();
     });
     runBtn.addEventListener('click', runSimulation);
+    solverMode.addEventListener('change', runSimulation);
+    apiUrl.addEventListener('change', runSimulation);
     document.querySelectorAll('.case-btn').forEach(btn => {
       btn.addEventListener('click', () => applyCase(btn.dataset.case));
     });
